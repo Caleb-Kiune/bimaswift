@@ -1,10 +1,9 @@
 interface QuotePageProps {
-    params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 }
 
 export default async function QuotePage({ params }: QuotePageProps) {
+  const { id } = await params;
 
-    const { id } = await params;
-    console.log(id);
-    return <div>Quote: {id}</div>;
+  return <div>Quote: {id}</div>;
 }
