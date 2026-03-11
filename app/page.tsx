@@ -14,9 +14,7 @@ export default function Home() {
           BimaSwift
         </h1>
 
-        <p className="mt-3 text-gray-600">
-          Fast Premium Quotations
-        </p>
+        <p className="mt-3 text-gray-600">Fast Premium Quotations</p>
 
         <div className="mt-10 flex flex-col gap-4">
           <Show when="signed-out">
@@ -42,7 +40,6 @@ export default function Home() {
             </SignOutButton>
           </Show>
         </div>
-
       </div>
     </main>
   );

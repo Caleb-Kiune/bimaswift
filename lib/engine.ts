@@ -12,7 +12,7 @@ interface MotorLevies {
   stampDuty: number;
 }
 
-interface QuoteBreakdown {
+export interface QuoteBreakdown {
   basicPremium: number;
   pvt: number;
   grossPremium: number;
@@ -80,22 +80,4 @@ export default function calculateMotorPremium(
   };
 }
 
-console.log(
-  calculateMotorPremium(2000000, "TPO", {
-    basicRateBps: 450,
-    basicMinPremium: 20000,
-    pvtRateBps: 25,
-    pvtMinPremium: 3000,
-    tpoFlatPremium: 7500,
-  }),
-);
 
-console.log(
-  calculateMotorPremium(2000000, "COMPREHENSIVE", {
-    basicRateBps: 450,
-    basicMinPremium: 20000,
-    pvtRateBps: 25,
-    pvtMinPremium: 3000,
-    tpoFlatPremium: 7500,
-  }),
-);
