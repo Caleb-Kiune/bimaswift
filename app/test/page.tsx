@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import calculateBasicPremium from "@/lib/engine-test";
+import { calculateBasicPremium } from "@/lib/engine-test";
+import { activeProducts } from "@/lib/data/insurers";
 
 export default function TestPage() {
   useEffect(() => {
-    calculateBasicPremium();
+    const bands = activeProducts[0].ratingBands;
+
+    const premium = calculateBasicPremium(800000, bands);
+
+    // console.log("Basic premium:", premium);
   }, []);
 
   return (
