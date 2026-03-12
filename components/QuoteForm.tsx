@@ -68,58 +68,56 @@ export default function QuoteForm() {
 
   console.log("Comparison Quotes:", comparisonQuotes);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSelectQuote = async (insurerId: string, quoteBreakdown: any) => {
     setIsSubmitting(true);
-
     const idempotencyKey = v4();
 
+    // send the specific insurerId and the selectedRiders array to backend!
     const vehicleData = {
-      idempotencyKey: idempotencyKey,
-      vehicleValue: vehicleValue,
-      yom: yom,
+      idempotencyKey,
+      vehicleValue,
+      yom,
       coverType: displayedCoverType,
+      insurerId,
+      selectedRiderIds: selectedRiders,
     };
 
     try {
       const res = await fetch("/api/quotes", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(vehicleData),
       });
 
-      const result = await res.json();
+      if (!res.ok) throw new Error("Failed to save quote");
 
-      // WhatsApp message
+      const savedQuote = await res.json();
+
+      //WhatsApp message 
       const whatsappMessage = `
-Quote Generated!
+*Motor Insurance Quote*
 Vehicle Value: KES ${vehicleValue.toLocaleString("en-KE")}
 Cover Type: ${displayedCoverType}
 
-Premium Breakdown:
-- Basic Premium: KES ${result.quote.basicPremium.toLocaleString("en-KE")}
-- PVT Premium: KES ${result.quote.pvt.toLocaleString("en-KE")}
-- Gross Premium: KES ${result.quote.grossPremium.toLocaleString("en-KE")}
-- ITL Levy: KES ${result.quote.itl.toLocaleString("en-KE")}
-- PHCF Levy: KES ${result.quote.phcf.toLocaleString("en-KE")}
-- Stamp Duty: KES ${result.quote.stampDuty.toLocaleString("en-KE")}
+*Premium Breakdown:*
+- Basic Premium: KES ${quoteBreakdown.basicPremium.toLocaleString("en-KE")}
+- Optional Riders: KES ${quoteBreakdown.calculatedRiders.reduce((sum: any, r: any) => sum + r.premium, 0).toLocaleString("en-KE")}
+- Levies & Taxes: KES ${(quoteBreakdown.itl + quoteBreakdown.phcf + quoteBreakdown.stampDuty).toLocaleString("en-KE")}
 
-Total Payable: KES ${result.quote.totalPayable.toLocaleString("en-KE")}
+*Total Payable: KES ${quoteBreakdown.totalPayable.toLocaleString("en-KE")}*
 `.trim();
 
       try {
         await navigator.clipboard.writeText(whatsappMessage);
-        alert("Quote copied to clipboard! Ready to paste in WhatsApp.");
+        alert(
+          "Quote saved to database and copied to clipboard! Ready to paste in WhatsApp.",
+        );
       } catch (err) {
         console.error("Failed to copy to clipboard:", err);
       }
-
-      console.log(result);
     } catch (err) {
       console.error("Error submitting quote", err);
+      alert("Failed to save quote to database.");
     } finally {
       setIsSubmitting(false);
     }
@@ -135,7 +133,7 @@ Total Payable: KES ${result.quote.totalPayable.toLocaleString("en-KE")}
 
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form className="space-y-4">
         <div>
           <label
             className="block text-sm font-medium text-gray-700"
@@ -221,14 +219,6 @@ Total Payable: KES ${result.quote.totalPayable.toLocaleString("en-KE")}
         {!products ? (
           <p className="text-sm text-gray-500">Loading active rates ...</p>
         ) : null}
-
-        <button
-          type="submit"
-          disabled={isSubmitting || !products}
-          className="w-full bg-blue-600 text-white py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
-        >
-          {isSubmitting ? "Saving..." : "Generate and Share Quote"}
-        </button>
       </form>
 
       {comparisonQuotes && (
@@ -269,6 +259,14 @@ Total Payable: KES ${result.quote.totalPayable.toLocaleString("en-KE")}
                     ).toLocaleString("en-KE")}
                   </span>
                 </div>
+
+                <button
+                  onClick={() => handleSelectQuote(comp.insurerId, comp.quote)}
+                  disabled={isSubmitting}
+                  className="mt-4 w-full bg-blue-600 text-white py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 transition"
+                >
+                  {isSubmitting ? "Saving..." : `Select ${comp.insurerName}`}
+                </button>
               </div>
             </div>
           ))}
