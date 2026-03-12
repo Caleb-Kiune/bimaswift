@@ -1,92 +1,8 @@
 import {
-  activeProducts,
   RatingBand,
   TieredRider,
   InsuranceProduct,
 } from "./data/insurers";
-
-export function calculateBasicPremium(
-  vehicleValue: number,
-  bands: RatingBand[],
-): number {
-  const correctRatingBand = bands.find(
-    (band) =>
-      band.minVehicleValue <= vehicleValue &&
-      band.maxVehicleValue >= vehicleValue,
-  );
-
-  if (!correctRatingBand) {
-    throw new Error("Vehicle value out of range");
-  }
-
-  const rate = correctRatingBand.basicRateBps;
-  const calculatedPremium = Math.round(vehicleValue * (rate / 10000));
-  const basicPremium = Math.max(
-    calculatedPremium,
-    correctRatingBand.basicMinPremium,
-  );
-
-  return basicPremium;
-}
-
-const pioneerBands = activeProducts[0].ratingBands;
-
-// console.log(calculateBasicPremium(800000, pioneerBands));
-// console.log(calculateBasicPremium(1200000, pioneerBands));
-// console.log(calculateBasicPremium(500000, pioneerBands));
-
-export function calculateRiderPremium(
-  vehicleValue: number,
-  rider: TieredRider,
-): number {
-  const bands = rider.bands;
-
-  const correctRiderBand = bands.find(
-    (band) =>
-      band.minVehicleValue <= vehicleValue &&
-      band.maxVehicleValue >= vehicleValue,
-  );
-
-  if (!correctRiderBand) {
-    throw new Error("Vehicle value out of range" + rider.name);
-  }
-
-  const rateType = correctRiderBand.rateType;
-  const rateValue = correctRiderBand.rateValue;
-  const minPremium = correctRiderBand.minPremium;
-
-  let riderPremium = 0;
-
-  if (rateType === "FREE") {
-    riderPremium = 0;
-  } else if (rateType === "FLAT") {
-    riderPremium = rateValue;
-  } else if (rateType === "PERCENTAGE_BPS") {
-    riderPremium = Math.round(vehicleValue * (rateValue / 10000));
-    riderPremium = Math.max(riderPremium, minPremium);
-  }
-
-  return riderPremium;
-}
-
-const pioneerPVT = activeProducts[0].riders.find((r) => r.type === "PVT")!;
-const pioneerLOU = activeProducts[0].riders.find(
-  (r) => r.type === "LOSS_OF_USE",
-)!;
-const pioneerEP = activeProducts[0].riders.find(
-  (r) => r.type === "EXCESS_PROTECTOR",
-)!;
-
-// // PVT Tests
-// console.log(calculateRiderPremium(2000000, pioneerPVT)); // Test D: Under 4M should be 0 since all vehicles under 4m are free pvt
-// console.log(calculateRiderPremium(5000000, pioneerPVT)); // Test E: Over 4M should hit 25bps (12500)
-
-// // Loss of Use Test/courtesy car
-// console.log(calculateRiderPremium(2000000, pioneerLOU)); // Test F: Flat rate (Should be 4500)
-
-// // Excess Protector Test
-// console.log(calculateRiderPremium(2000000, pioneerEP)); // Test G: Below Minimum premium(Should be 5000)
-// console.log(calculateRiderPremium(6000000, pioneerEP)); // Test H: Above Minimum premium(Should be 125000)
 
 export interface CalculatedRider {
   id: string;
@@ -104,6 +20,76 @@ export interface QuoteBreakdown {
   totalPayable: number;
 }
 
+/**
+ * Calculates the basic premium based on tiered rating bands.
+ * Applies a percentage math floor to ensure the insurer's minimum premium is met.
+ */
+export function calculateBasicPremium(
+  vehicleValue: number,
+  bands: RatingBand[],
+): number {
+  const correctRatingBand = bands.find(
+    (band) =>
+      band.minVehicleValue <= vehicleValue &&
+      band.maxVehicleValue >= vehicleValue,
+  );
+
+  if (!correctRatingBand) {
+    throw new Error("Vehicle value out of range for basic premium");
+  }
+
+  const rate = correctRatingBand.basicRateBps;
+  // Convert basis points to percentage and round to nearest whole shilling
+  const calculatedPremium = Math.round(vehicleValue * (rate / 10000));
+  
+  // Apply the minimum premium floor
+  return Math.max(calculatedPremium, correctRatingBand.basicMinPremium);
+}
+
+/**
+ * Calculates the premium for a specific optional rider (e.g., PVT, Excess Protector).
+ * Handles polymorphic rate types: FREE, FLAT, and PERCENTAGE_BPS.
+ */
+export function calculateRiderPremium(
+  vehicleValue: number,
+  rider: TieredRider,
+): number {
+  const bands = rider.bands;
+
+  const correctRiderBand = bands.find(
+    (band) =>
+      band.minVehicleValue <= vehicleValue &&
+      band.maxVehicleValue >= vehicleValue,
+  );
+
+  if (!correctRiderBand) {
+    throw new Error("Vehicle value out of range for rider: " + rider.name);
+  }
+
+  const { rateType, rateValue, minPremium } = correctRiderBand;
+
+  if (rateType === "FREE") {
+    return 0; // Completely bypass minimum premiums for free tiers
+  } 
+  
+  if (rateType === "FLAT") {
+    return rateValue; // Flat absolute cost regardless of vehicle value
+  } 
+  
+  if (rateType === "PERCENTAGE_BPS") {
+    const riderPremium = Math.round(vehicleValue * (rateValue / 10000));
+    return Math.max(riderPremium, minPremium);
+  }
+
+  // Fallback safety
+  return 0;
+}
+
+/**
+ * THE ORCHESTRATOR
+ * Main engine function to compute the complete motor insurance quote breakdown.
+ * Evaluates the cover type, aggregates riders, and computes regulatory levies.
+ */
 export default function calculateMotorPremium(
   vehicleValue: number,
   coverType: "COMPREHENSIVE" | "TPO",
@@ -111,30 +97,26 @@ export default function calculateMotorPremium(
   selectedRiderIds: string[]
 ): QuoteBreakdown {
   
-  // THE BOXES WE WILL RETURN AT THE END
+  // --- 1. INITIALIZATION ---
   let basicPremium = 0;
-  let calculatedRiders: CalculatedRider[] = []; 
+  const calculatedRiders: CalculatedRider[] = []; 
 
-
-  
-  //basic premium calculation
+  // --- 2. PREMIUM CALCULATION (ROUTING) ---
   if (coverType === "TPO") {
-   
+    // TPO carries a strict flat rate with no applicable riders
     basicPremium = product.tpoFlatPremium; 
     
   } else if (coverType === "COMPREHENSIVE") {
-  
+    // A. Compute the foundational Comprehensive basic premium
     basicPremium = calculateBasicPremium(vehicleValue, product.ratingBands);
 
-    //Loop over the IDs the user selected 
+    // B. Process all selected optional riders
     for (const riderId of selectedRiderIds) {
       const rider = product.riders.find((r) => r.id === riderId);
 
       if (rider) {
-        //Do the math for THIS specific rider
         const premiumForThisRider = calculateRiderPremium(vehicleValue, rider);
 
-        // 4. Push the result into our calculatedRiders box
         calculatedRiders.push({
           id: rider.id,
           name: rider.name,
@@ -144,26 +126,21 @@ export default function calculateMotorPremium(
     }
   }
 
-  
-  //sum of all the rider premiums
+  // --- 3. AGGREGATION & LEVIES ---
+  // Sum up all dynamically calculated rider premiums
   const sumOfRiders = calculatedRiders.reduce((total, currentRider) => total + currentRider.premium, 0);
 
-  //Calculate Gross Premium
+  // Gross Premium is the subtotal before regulatory taxes
   const grossPremium = basicPremium + sumOfRiders;
 
- 
- //add levies
-  const itl = Math.round(grossPremium * (20 / 10000)); 
-  
-  
-  const phcf = Math.round(grossPremium * (25 / 10000)); 
-  
-
-  const stampDuty = 40; 
+  // IRA Mandated Levies (Calculated against Gross Premium, rounded to whole shillings)
+  const itl = Math.round(grossPremium * (20 / 10000));   // 0.20%
+  const phcf = Math.round(grossPremium * (25 / 10000));  // 0.25%
+  const stampDuty = 40;                                  // Flat rate
 
   const totalPayable = grossPremium + itl + phcf + stampDuty; 
 
-  //final QuoteBreakdown out the door!
+  // --- 4. FINAL ASSEMBLY ---
   return {
     basicPremium,
     calculatedRiders,
@@ -174,16 +151,3 @@ export default function calculateMotorPremium(
     totalPayable
   };
 }
-
-
-
-const pioneerProduct = activeProducts[0];
-
-const finalQuote = calculateMotorPremium(
-  2000000, 
-  "COMPREHENSIVE", 
-  pioneerProduct, 
-  ["pioneer_pvt", "pioneer_ep", "pioneer_lou_10"]
-);
-
-console.log(JSON.stringify(finalQuote, null, 2));
