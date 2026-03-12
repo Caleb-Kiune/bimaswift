@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { activeRates } from "@/lib/rates";
+import { activeProducts } from "@/lib/data/insurers";
 
 export async function GET() {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  return NextResponse.json(activeRates);
+  return NextResponse.json(activeProducts);
 }

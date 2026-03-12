@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import calculateMotorPremium, { QuoteBreakdown } from "@/lib/engine";
+// import calculateMotorPremium, { QuoteBreakdown } from "@/lib/engine";
+import calculateMotorPremium from "@/lib/engine-test";
+import { InsuranceProduct } from "@/lib/data/insurers";
 import { v4 } from "uuid";
 
 interface MotorPremiumRates {
@@ -18,15 +20,17 @@ export default function QuoteForm() {
   const [coverType, setCoverType] = useState<"COMPREHENSIVE" | "TPO">(
     "COMPREHENSIVE",
   );
-  const [rates, setRates] = useState<MotorPremiumRates | null>(null);
+  const [products, setProducts] = useState<InsuranceProduct[] | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedRiders, setSelectedRiders] = useState<string[]>([]);
 
+  console.log("Fetched Products:", products);
   //fetch rates to the client for speed purposes and instant feedback
   useEffect(() => {
     async function fetchRates() {
       const res = await fetch("/api/rates/active");
       const data = await res.json();
-      setRates(data);
+      setProducts(data);
     }
 
     fetchRates();
@@ -42,14 +46,27 @@ export default function QuoteForm() {
   // Use derived value if forced, otherwise use selected
   const displayedCoverType = forceTpo ? "TPO" : coverType;
 
-  console.log(rates);
+  console.log(products);
 
-  const premiumBreakdown =
-    rates && vehicleValue !== "" && yom !== ""
-      ? calculateMotorPremium(vehicleValue, displayedCoverType, rates!)
+  const comparisonQuotes =
+    products && vehicleValue !== "" && yom !== ""
+      ? products.map((product) => {
+          const quote = calculateMotorPremium(
+            vehicleValue,
+            displayedCoverType,
+            product,
+            selectedRiders,
+          );
+
+          return {
+            insurerId: product.insurerId,
+            insurerName: product.insurerName,
+            quote: quote,
+          };
+        })
       : null;
 
-  console.log(premiumBreakdown);
+  console.log("Comparison Quotes:", comparisonQuotes);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +125,14 @@ Total Payable: KES ${result.quote.totalPayable.toLocaleString("en-KE")}
     }
   };
 
+  const handleRiderToggle = (riderId: string) => {
+    setSelectedRiders((prev) =>
+      prev.includes(riderId)
+        ? prev.filter((id) => id !== riderId)
+        : [...prev, riderId],
+    );
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -163,95 +188,90 @@ Total Payable: KES ${result.quote.totalPayable.toLocaleString("en-KE")}
           <option value="TPO">TPO</option>
         </select>
 
+        {products && products[0] && displayedCoverType === "COMPREHENSIVE" && (
+          <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+            <h4 className="text-sm font-semibold text-gray-700 mb-3">
+              Optional Riders
+            </h4>
+            <div className="space-y-2">
+              {products[0].riders.map((rider) => (
+                <label
+                  key={rider.id}
+                  className="flex items-center space-x-3 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedRiders.includes(rider.id)}
+                    onChange={() => handleRiderToggle(rider.id)}
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">{rider.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
         {forceTpo && (
           <p className="text-sm text-red-500">
             Cover type is automatically set to TPO due to vehicle value or age.
           </p>
         )}
 
-        {!rates ? (
+        {!products ? (
           <p className="text-sm text-gray-500">Loading active rates ...</p>
         ) : null}
 
         <button
           type="submit"
-          disabled={isSubmitting || !rates}
+          disabled={isSubmitting || !products}
           className="w-full bg-blue-600 text-white py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
         >
           {isSubmitting ? "Saving..." : "Generate and Share Quote"}
         </button>
       </form>
 
-      {premiumBreakdown && (
-        <div className="mt-6 bg-gray-50 p-4 rounded-md border border-gray-200 text-sm">
-          <h3 className="font-semibold text-gray-800 mb-3 border-b pb-2">
-            Quote Summary
+      {comparisonQuotes && (
+        <div className="mt-8 space-y-4">
+          <h3 className="font-semibold text-gray-800 border-b pb-2">
+            Available Quotes
           </h3>
 
-          <div className="flex justify-between mb-1">
-            <span className="text-gray-600">Vehicle Value:</span>
-            <span className="font-medium">
-              KES {vehicleValue.toLocaleString("en-KE")}
-            </span>
-          </div>
-
-          <div className="flex justify-between mb-4">
-            <span className="text-gray-600">Cover Type:</span>
-            <span className="font-medium">{displayedCoverType}</span>
-          </div>
-
-          <div className="space-y-2 border-t pt-3">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Basic Premium:</span>
-              <span className="font-medium">
-                KES {premiumBreakdown.basicPremium.toLocaleString("en-KE")}
-              </span>
-            </div>
-
-            {premiumBreakdown.pvt > 0 && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">PVT Premium:</span>
-                <span className="font-medium">
-                  KES {premiumBreakdown.pvt.toLocaleString("en-KE")}
+          {comparisonQuotes.map((comp) => (
+            <div
+              key={comp.insurerId}
+              className="bg-gray-50 p-4 rounded-md border border-gray-200 text-sm"
+            >
+              <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200">
+                <span className="font-bold text-lg text-blue-900">
+                  {comp.insurerName}
+                </span>
+                <span className="font-bold text-lg text-gray-900">
+                  KES {comp.quote.totalPayable.toLocaleString("en-KE")}
                 </span>
               </div>
-            )}
 
-            <div className="flex justify-between">
-              <span className="text-gray-600">Gross Premium:</span>
-              <span className="font-medium">
-                KES {premiumBreakdown.grossPremium.toLocaleString("en-KE")}
-              </span>
+              <div className="space-y-1">
+                <div className="flex justify-between text-gray-600">
+                  <span>Basic Premium:</span>
+                  <span>
+                    KES {comp.quote.basicPremium.toLocaleString("en-KE")}
+                  </span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Levies & Taxes:</span>
+                  <span>
+                    KES{" "}
+                    {(
+                      comp.quote.itl +
+                      comp.quote.phcf +
+                      comp.quote.stampDuty
+                    ).toLocaleString("en-KE")}
+                  </span>
+                </div>
+              </div>
             </div>
-
-            <div className="flex justify-between">
-              <span className="text-gray-600">ITL Levy:</span>
-              <span className="font-medium">
-                KES {premiumBreakdown.itl.toLocaleString("en-KE")}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-gray-600">PHCF Levy:</span>
-              <span className="font-medium">
-                KES {premiumBreakdown.phcf.toLocaleString("en-KE")}
-              </span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-gray-600">Stamp Duty:</span>
-              <span className="font-medium">
-                KES {premiumBreakdown.stampDuty.toLocaleString("en-KE")}
-              </span>
-            </div>
-
-            <div className="flex justify-between border-t border-gray-300 pt-2 mt-2 text-base font-bold text-gray-900">
-              <span>Total Payable:</span>
-              <span>
-                KES {premiumBreakdown.totalPayable.toLocaleString("en-KE")}
-              </span>
-            </div>
-          </div>
+          ))}
         </div>
       )}
     </div>
