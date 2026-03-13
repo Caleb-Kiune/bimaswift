@@ -1,24 +1,7 @@
-import {
-  RatingBand,
-  TieredRider,
-  InsuranceProduct,
-} from "./data/insurers";
+import { LEVIES } from "./constants";
+import { RatingBand, TieredRider, InsuranceProduct, QuoteBreakdown, CalculatedRider } from "@/types";
 
-export interface CalculatedRider {
-  id: string;
-  name: string;
-  premium: number;
-}
 
-export interface QuoteBreakdown {
-  basicPremium: number;
-  calculatedRiders: CalculatedRider[];
-  grossPremium: number;
-  itl: number;
-  phcf: number;
-  stampDuty: number;
-  totalPayable: number;
-}
 
 /**
  * Calculates the basic premium based on tiered rating bands.
@@ -134,9 +117,9 @@ export default function calculateMotorPremium(
   const grossPremium = basicPremium + sumOfRiders;
 
   // IRA Mandated Levies (Calculated against Gross Premium, rounded to whole shillings)
-  const itl = Math.round(grossPremium * (20 / 10000));   // 0.20%
-  const phcf = Math.round(grossPremium * (25 / 10000));  // 0.25%
-  const stampDuty = 40;                                  // Flat rate
+  const itl = Math.round(grossPremium * (LEVIES.ITL_RATE_BPS / 10000));   // 0.20%
+  const phcf = Math.round(grossPremium * (LEVIES.PHCF_RATE_BPS / 10000));  // 0.25%
+  const stampDuty = LEVIES.STAMP_DUTY_KES;                                  // Flat rate
 
   const totalPayable = grossPremium + itl + phcf + stampDuty; 
 
