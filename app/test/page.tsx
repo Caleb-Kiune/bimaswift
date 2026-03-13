@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { calculateBasicPremium } from "@/lib/engine-test";
+import { calculateBasicPremium } from "@/lib/engine";
 import { activeProducts } from "@/lib/data/insurers";
 
 export default function TestPage() {

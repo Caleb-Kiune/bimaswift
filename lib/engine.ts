@@ -1,20 +1,18 @@
-interface MotorPremiumRates {
-  basicRateBps: number;
-  basicMinPremium: number;
-  pvtRateBps: number;
-  pvtMinPremium: number;
-  tpoFlatPremium: number;
-}
+import {
+  RatingBand,
+  TieredRider,
+  InsuranceProduct,
+} from "./data/insurers";
 
-interface MotorLevies {
-  itlRateBps: number;
-  phcfRateBps: number;
-  stampDuty: number;
+export interface CalculatedRider {
+  id: string;
+  name: string;
+  premium: number;
 }
 
 export interface QuoteBreakdown {
   basicPremium: number;
-  pvt: number;
+  calculatedRiders: CalculatedRider[];
   grossPremium: number;
   itl: number;
   phcf: number;
@@ -22,62 +20,134 @@ export interface QuoteBreakdown {
   totalPayable: number;
 }
 
+/**
+ * Calculates the basic premium based on tiered rating bands.
+ * Applies a percentage math floor to ensure the insurer's minimum premium is met.
+ */
+export function calculateBasicPremium(
+  vehicleValue: number,
+  bands: RatingBand[],
+): number {
+  const correctRatingBand = bands.find(
+    (band) =>
+      band.minVehicleValue <= vehicleValue &&
+      band.maxVehicleValue >= vehicleValue,
+  );
+
+  if (!correctRatingBand) {
+    throw new Error("Vehicle value out of range for basic premium");
+  }
+
+  const rate = correctRatingBand.basicRateBps;
+  // Convert basis points to percentage and round to nearest whole shilling
+  const calculatedPremium = Math.round(vehicleValue * (rate / 10000));
+  
+  // Apply the minimum premium floor
+  return Math.max(calculatedPremium, correctRatingBand.basicMinPremium);
+}
+
+/**
+ * Calculates the premium for a specific optional rider (e.g., PVT, Excess Protector).
+ * Handles polymorphic rate types: FREE, FLAT, and PERCENTAGE_BPS.
+ */
+export function calculateRiderPremium(
+  vehicleValue: number,
+  rider: TieredRider,
+): number {
+  const bands = rider.bands;
+
+  const correctRiderBand = bands.find(
+    (band) =>
+      band.minVehicleValue <= vehicleValue &&
+      band.maxVehicleValue >= vehicleValue,
+  );
+
+  if (!correctRiderBand) {
+    throw new Error("Vehicle value out of range for rider: " + rider.name);
+  }
+
+  const { rateType, rateValue, minPremium } = correctRiderBand;
+
+  if (rateType === "FREE") {
+    return 0; // Completely bypass minimum premiums for free tiers
+  } 
+  
+  if (rateType === "FLAT") {
+    return rateValue; // Flat absolute cost regardless of vehicle value
+  } 
+  
+  if (rateType === "PERCENTAGE_BPS") {
+    const riderPremium = Math.round(vehicleValue * (rateValue / 10000));
+    return Math.max(riderPremium, minPremium);
+  }
+
+  // Fallback safety
+  return 0;
+}
+
+/**
+ * THE ORCHESTRATOR
+ * Main engine function to compute the complete motor insurance quote breakdown.
+ * Evaluates the cover type, aggregates riders, and computes regulatory levies.
+ */
 export default function calculateMotorPremium(
   vehicleValue: number,
   coverType: "COMPREHENSIVE" | "TPO",
-  rates: MotorPremiumRates,
+  product: InsuranceProduct,
+  selectedRiderIds: string[]
 ): QuoteBreakdown {
-    
-  //Initialize variables
-  let basicPremium = 0;
-  let pvtPremium = 0;
-
-  //Levies
-  const levies: MotorLevies = {
-    itlRateBps: 20,
-    phcfRateBps: 25,
-    stampDuty: 40,
-  };
   
+  // --- 1. INITIALIZATION ---
+  let basicPremium = 0;
+  const calculatedRiders: CalculatedRider[] = []; 
 
-  if (coverType === "COMPREHENSIVE") {
-    //Compute Comprehensive
-    basicPremium = Math.max(
-      Math.round(vehicleValue * (rates.basicRateBps / 10000)),
-      rates.basicMinPremium,
-    );
+  // --- 2. PREMIUM CALCULATION (ROUTING) ---
+  if (coverType === "TPO") {
+    // TPO carries a strict flat rate with no applicable riders
+    basicPremium = product.tpoFlatPremium; 
+    
+  } else if (coverType === "COMPREHENSIVE") {
+    // A. Compute the foundational Comprehensive basic premium
+    basicPremium = calculateBasicPremium(vehicleValue, product.ratingBands);
 
-    pvtPremium = Math.max(
-      Math.round(vehicleValue * (rates.pvtRateBps / 10000)),
-      rates.pvtMinPremium,
-    );
-  } else if (coverType === "TPO") {
-    //Compute TPO
-    basicPremium = rates.tpoFlatPremium;
+    // B. Process all selected optional riders
+    for (const riderId of selectedRiderIds) {
+      const rider = product.riders.find((r) => r.id === riderId);
 
-    pvtPremium = 0;
+      if (rider) {
+        const premiumForThisRider = calculateRiderPremium(vehicleValue, rider);
+
+        calculatedRiders.push({
+          id: rider.id,
+          name: rider.name,
+          premium: premiumForThisRider
+        });
+      }
+    }
   }
 
-  //Compute Gross Premium
-  const grossPremium = basicPremium + pvtPremium;
+  // --- 3. AGGREGATION & LEVIES ---
+  // Sum up all dynamically calculated rider premiums
+  const sumOfRiders = calculatedRiders.reduce((total, currentRider) => total + currentRider.premium, 0);
 
-  // Add levies
-  const itl = Math.round(grossPremium * (levies.itlRateBps / 10000));
-  const phcf = Math.round(grossPremium * (levies.phcfRateBps / 10000));
+  // Gross Premium is the subtotal before regulatory taxes
+  const grossPremium = basicPremium + sumOfRiders;
 
-  //Compute Total Payable
-  const totalPayable = grossPremium + itl + phcf + levies.stampDuty;
+  // IRA Mandated Levies (Calculated against Gross Premium, rounded to whole shillings)
+  const itl = Math.round(grossPremium * (20 / 10000));   // 0.20%
+  const phcf = Math.round(grossPremium * (25 / 10000));  // 0.25%
+  const stampDuty = 40;                                  // Flat rate
 
-  //Return Quote Breakdown
+  const totalPayable = grossPremium + itl + phcf + stampDuty; 
+
+  // --- 4. FINAL ASSEMBLY ---
   return {
     basicPremium,
-    pvt: pvtPremium,
+    calculatedRiders,
     grossPremium,
     itl,
     phcf,
-    stampDuty: levies.stampDuty,
-    totalPayable,
+    stampDuty,
+    totalPayable
   };
 }
-
-

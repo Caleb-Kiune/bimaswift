@@ -1,18 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-// import calculateMotorPremium, { QuoteBreakdown } from "@/lib/engine";
-import calculateMotorPremium from "@/lib/engine-test";
+import calculateMotorPremium, { QuoteBreakdown } from "@/lib/engine";
 import { InsuranceProduct } from "@/lib/data/insurers";
 import { v4 } from "uuid";
-
-interface MotorPremiumRates {
-  basicRateBps: number;
-  basicMinPremium: number;
-  pvtRateBps: number;
-  pvtMinPremium: number;
-  tpoFlatPremium: number;
-}
 
 export default function QuoteForm() {
   const [vehicleValue, setVehicleValue] = useState<number | "">("");
@@ -22,7 +13,7 @@ export default function QuoteForm() {
   );
   const [products, setProducts] = useState<InsuranceProduct[] | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedRiders, setSelectedRiders] = useState<string[]>([]);
+  const [selectedRiderTypes, setSelectedRiderTypes] = useState<string[]>([]);
 
   console.log("Fetched Products:", products);
   //fetch rates to the client for speed purposes and instant feedback
@@ -51,35 +42,47 @@ export default function QuoteForm() {
   const comparisonQuotes =
     products && vehicleValue !== "" && yom !== ""
       ? products.map((product) => {
+          //Look at the types the user checked (e.g., "PVT").
+          //Find this specific product's rider ID for that type (e.g., "monarch_pvt").
+          const productSpecificRiderIds = product.riders
+            .filter((rider) => selectedRiderTypes.includes(rider.type))
+            .map((rider) => rider.id);
+
+          //Pass the translated array of IDs into the engine!
           const quote = calculateMotorPremium(
             vehicleValue,
             displayedCoverType,
             product,
-            selectedRiders,
+            productSpecificRiderIds,
           );
 
           return {
             insurerId: product.insurerId,
             insurerName: product.insurerName,
             quote: quote,
+            riderIds: productSpecificRiderIds,
           };
         })
       : null;
 
   console.log("Comparison Quotes:", comparisonQuotes);
 
-  const handleSelectQuote = async (insurerId: string, quoteBreakdown: any) => {
+  const handleSelectQuote = async (
+    insurerId: string,
+    quoteBreakdown: QuoteBreakdown,
+    riderIds: string[],
+  ) => {
     setIsSubmitting(true);
     const idempotencyKey = v4();
 
-    // send the specific insurerId and the selectedRiders array to backend!
+    //send the specific insurerId and the correct rider IDs to backend!
     const vehicleData = {
       idempotencyKey,
       vehicleValue,
       yom,
       coverType: displayedCoverType,
       insurerId,
-      selectedRiderIds: selectedRiders,
+      selectedRiderIds: riderIds,
     };
 
     try {
@@ -92,8 +95,9 @@ export default function QuoteForm() {
       if (!res.ok) throw new Error("Failed to save quote");
 
       const savedQuote = await res.json();
+      console.log("Quote Saved:", savedQuote);
 
-      //WhatsApp message 
+      //WhatsApp message
       const whatsappMessage = `
 *Motor Insurance Quote*
 Vehicle Value: KES ${vehicleValue.toLocaleString("en-KE")}
@@ -101,7 +105,7 @@ Cover Type: ${displayedCoverType}
 
 *Premium Breakdown:*
 - Basic Premium: KES ${quoteBreakdown.basicPremium.toLocaleString("en-KE")}
-- Optional Riders: KES ${quoteBreakdown.calculatedRiders.reduce((sum: any, r: any) => sum + r.premium, 0).toLocaleString("en-KE")}
+- Optional Riders: KES ${quoteBreakdown.calculatedRiders.reduce((sum: number, r: { premium: number }) => sum + r.premium, 0).toLocaleString("en-KE")}
 - Levies & Taxes: KES ${(quoteBreakdown.itl + quoteBreakdown.phcf + quoteBreakdown.stampDuty).toLocaleString("en-KE")}
 
 *Total Payable: KES ${quoteBreakdown.totalPayable.toLocaleString("en-KE")}*
@@ -123,11 +127,11 @@ Cover Type: ${displayedCoverType}
     }
   };
 
-  const handleRiderToggle = (riderId: string) => {
-    setSelectedRiders((prev) =>
-      prev.includes(riderId)
-        ? prev.filter((id) => id !== riderId)
-        : [...prev, riderId],
+  const handleRiderToggle = (riderType: string) => {
+    setSelectedRiderTypes((prev) =>
+      prev.includes(riderType)
+        ? prev.filter((type) => type !== riderType)
+        : [...prev, riderType],
     );
   };
 
@@ -186,26 +190,45 @@ Cover Type: ${displayedCoverType}
           <option value="TPO">TPO</option>
         </select>
 
-        {products && products[0] && displayedCoverType === "COMPREHENSIVE" && (
+        {products && displayedCoverType === "COMPREHENSIVE" && (
           <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
             <h4 className="text-sm font-semibold text-gray-700 mb-3">
               Optional Riders
             </h4>
             <div className="space-y-2">
-              {products[0].riders.map((rider) => (
-                <label
-                  key={rider.id}
-                  className="flex items-center space-x-3 cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedRiders.includes(rider.id)}
-                    onChange={() => handleRiderToggle(rider.id)}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">{rider.name}</span>
-                </label>
-              ))}
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedRiderTypes.includes("PVT")}
+                  onChange={() => handleRiderToggle("PVT")}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">
+                  Political Violence & Terrorism (PVT)
+                </span>
+              </label>
+
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedRiderTypes.includes("EXCESS_PROTECTOR")}
+                  onChange={() => handleRiderToggle("EXCESS_PROTECTOR")}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">Excess Protector</span>
+              </label>
+
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedRiderTypes.includes("LOSS_OF_USE")}
+                  onChange={() => handleRiderToggle("LOSS_OF_USE")}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">
+                  Loss of Use / Courtesy Car
+                </span>
+              </label>
             </div>
           </div>
         )}
@@ -261,7 +284,9 @@ Cover Type: ${displayedCoverType}
                 </div>
 
                 <button
-                  onClick={() => handleSelectQuote(comp.insurerId, comp.quote)}
+                  onClick={() =>
+                    handleSelectQuote(comp.insurerId, comp.quote, comp.riderIds)
+                  }
                   disabled={isSubmitting}
                   className="mt-4 w-full bg-blue-600 text-white py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 transition"
                 >
