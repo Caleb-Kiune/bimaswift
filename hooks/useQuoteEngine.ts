@@ -8,7 +8,9 @@ import { v4 } from "uuid";
 export function useQuoteEngine() {
   const [vehicleValue, setVehicleValue] = useState<number | "">("");
   const [yom, setYom] = useState<number | "">("");
-  const [coverType, setCoverType] = useState<"COMPREHENSIVE" | "TPO">("COMPREHENSIVE");
+  const [coverType, setCoverType] = useState<"COMPREHENSIVE" | "TPO">(
+    "COMPREHENSIVE",
+  );
   const [products, setProducts] = useState<InsuranceProduct[] | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedRiderTypes, setSelectedRiderTypes] = useState<string[]>([]);
@@ -24,15 +26,31 @@ export function useQuoteEngine() {
 
   const currentYear = new Date().getFullYear();
   const forceTpo =
-    (vehicleValue !== "" && vehicleValue < UNDERWRITING_RULES.MIN_COMPREHENSIVE_VALUE_KES) ||
-    (yom !== "" && currentYear - yom > UNDERWRITING_RULES.MAX_COMPREHENSIVE_AGE_YEARS);
+    (vehicleValue !== "" &&
+      vehicleValue < UNDERWRITING_RULES.MIN_COMPREHENSIVE_VALUE_KES) ||
+    (yom !== "" &&
+      currentYear - yom > UNDERWRITING_RULES.MAX_COMPREHENSIVE_AGE_YEARS);
   const displayedCoverType = forceTpo ? "TPO" : coverType;
 
   const comparisonQuotes =
     products && vehicleValue !== "" && yom !== ""
       ? products.map((product) => {
           const productSpecificRiderIds = product.riders
-            .filter((rider) => selectedRiderTypes.includes(rider.type))
+            .filter((rider) => {
+              if (selectedRiderTypes.includes(rider.type)) return true;
+
+              const activeBand = rider.bands.find(
+                (b) =>
+                  vehicleValue >= b.minVehicleValue &&
+                  vehicleValue <= b.maxVehicleValue,
+              );
+
+              if (activeBand && activeBand.rateType === "FREE") {
+                return true;
+              }
+
+              return false;
+            })
             .map((rider) => rider.id);
 
           const quote = calculateMotorPremium(
@@ -86,7 +104,12 @@ export function useQuoteEngine() {
       if (!res.ok) throw new Error("Failed to save quote");
 
       const savedQuote = await res.json();
+
+      const selectedProduct = products?.find((p) => p.insurerId === insurerId);
+      const insurerName = selectedProduct?.insurerName || "Selected Insurer";
+
       const whatsappMessage = formatWhatsAppQuote(
+        insurerName,
         vehicleValue,
         displayedCoverType,
         quoteBreakdown,
@@ -94,7 +117,9 @@ export function useQuoteEngine() {
 
       try {
         await navigator.clipboard.writeText(whatsappMessage);
-        alert("Quote saved to database and copied to clipboard! Ready to paste in WhatsApp.");
+        alert(
+          "Quote saved to database and copied to clipboard! Ready to paste in WhatsApp.",
+        );
       } catch (err) {
         console.error("Failed to copy to clipboard:", err);
       }
@@ -106,7 +131,6 @@ export function useQuoteEngine() {
     }
   };
 
-  // Expose these wires to the UI
   return {
     vehicleValue,
     setVehicleValue,

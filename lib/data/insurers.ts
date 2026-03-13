@@ -1,9 +1,5 @@
 import { InsuranceProduct } from "@/types";
 
-// ==========================================
-// THE STATIC DATABASE (Single Source of Truth)
-// ==========================================
-
 export const activeProducts: InsuranceProduct[] = [
   // --- 1. PIONEER INSURANCE ---
   {
