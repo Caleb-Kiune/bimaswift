@@ -13,7 +13,9 @@ export function useQuoteEngine() {
   );
   const [products, setProducts] = useState<InsuranceProduct[] | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedRiderTypes, setSelectedRiderTypes] = useState<string[]>([]);
+  const [selectedRiderTypes, setSelectedRiderTypes] = useState<
+    Record<string, any>
+  >({});
 
   useEffect(() => {
     async function fetchRates() {
@@ -37,7 +39,7 @@ export function useQuoteEngine() {
       ? products.map((product) => {
           const productSpecificRiderIds = product.riders
             .filter((rider) => {
-              if (selectedRiderTypes.includes(rider.type)) return true;
+              if (selectedRiderTypes[rider.type]) return true;
 
               const activeBand = rider.bands.find(
                 (b) =>
@@ -51,7 +53,11 @@ export function useQuoteEngine() {
 
               return false;
             })
-            .map((rider) => rider.id);
+            .map((rider) => {
+              const selected = selectedRiderTypes[rider.type];
+              if (typeof selected === "string") return selected;
+              return rider.id;
+            });
 
           const quote = calculateMotorPremium(
             vehicleValue,
@@ -70,11 +76,20 @@ export function useQuoteEngine() {
       : null;
 
   const handleRiderToggle = (riderType: string) => {
-    setSelectedRiderTypes((prev) =>
-      prev.includes(riderType)
-        ? prev.filter((type) => type !== riderType)
-        : [...prev, riderType],
-    );
+    setSelectedRiderTypes((prev) => {
+      if (prev[riderType]) {
+        const { [riderType]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [riderType]: true };
+    });
+  };
+
+  const handleRiderOptionChange = (riderType: string, optionId: string) => {
+    setSelectedRiderTypes((prev) => ({
+      ...prev,
+      [riderType]: optionId,
+    }));
   };
 
   const handleSelectQuote = async (
@@ -145,6 +160,7 @@ export function useQuoteEngine() {
     displayedCoverType,
     comparisonQuotes,
     handleRiderToggle,
+    handleRiderOptionChange,
     handleSelectQuote,
   };
 }

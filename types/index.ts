@@ -2,7 +2,7 @@
  * ==========================================
  * BIMA SWIFT - CORE DOMAIN TYPES
  * ==========================================
- * This file serves as the single source of truth for all data structures 
+ * This file serves as the single source of truth for all data structures
  * used across the application (Engine, UI, and API).
  */
 
@@ -14,7 +14,22 @@
 export type RateType = "FREE" | "FLAT" | "PERCENTAGE_BPS";
 
 /** Defines the universal categories of optional coverages. */
-export type RiderType = "PVT" | "EXCESS_PROTECTOR" | "LOSS_OF_USE";
+export type RiderType =
+  | "PVT"
+  | "EXCESS_PROTECTOR"
+  | "LOSS_OF_USE"
+  | "PERSONAL_ACCIDENT"
+  | "WINDSCREEN"
+  | "NON_STANDARD_ACCESSORIES"
+  | "EMERGENCY_MEDICAL_EXPENSES"
+  | "ROAD_RESCUE"
+  | "THEFT_FIRE_EXTENSIONS";
+
+export interface RiderOption {
+  id: string;
+  label: string;
+  premium: number;
+}
 
 /**
  * Defines a pricing tier for the basic comprehensive premium based on vehicle value.
@@ -60,6 +75,9 @@ export interface TieredRider {
   isToggleable: boolean;
   /** The value-based pricing rules for this rider. */
   bands: RiderBand[];
+
+  options?: RiderOption[];
+  meta?: Record<string, unknown>;
 }
 
 /**
@@ -119,4 +137,3 @@ export interface QuoteBreakdown {
   /** The final, exact amount the client must pay (in KES). */
   totalPayable: number;
 }
-

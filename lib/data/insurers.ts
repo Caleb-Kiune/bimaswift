@@ -73,19 +73,27 @@ export const activeProducts: InsuranceProduct[] = [
         ],
       },
       {
-        id: "pioneer_lou_10",
+        id: "pioneer_lou",
         type: "LOSS_OF_USE",
-        name: "Loss of Use (10 Days)",
+        name: "Loss of Use / Courtesy Car",
         isToggleable: true,
-        bands: [
+        bands: [],
+        options: [
           {
-            minVehicleValue: 0,
-            maxVehicleValue: 999999999,
-            rateType: "FLAT",
-            rateValue: 4500,
-            minPremium: 4500,
+            id: "lou_10",
+            label: "10 Days (Limit: KES 30,000)",
+            premium: 4500,
+          },
+          {
+            id: "lou_20",
+            label: "20 Days (Limit: KES 60,000)",
+            premium: 7500,
           },
         ],
+        meta: {
+          description:
+            "Provides a replacement vehicle while yours is being repaired.",
+        },
       },
     ],
   },
@@ -157,17 +165,20 @@ export const activeProducts: InsuranceProduct[] = [
       {
         id: "monarch_lou",
         type: "LOSS_OF_USE",
-        name: "Loss of Use (Max 30k Limit)",
+        name: "Loss of Use / Courtesy Car",
         isToggleable: true,
-        bands: [
+        bands: [],
+        options: [
           {
-            minVehicleValue: 0,
-            maxVehicleValue: 999999999,
-            rateType: "FLAT",
-            rateValue: 3000,
-            minPremium: 3000,
+            id: "lou_10",
+            label: "10 Days (Limit: KES 30,000)",
+            premium: 4500,
           },
         ],
+        meta: {
+          description:
+            "Provides a replacement vehicle while yours is being repaired.",
+        },
       },
     ],
   },
@@ -249,6 +260,34 @@ export const activeProducts: InsuranceProduct[] = [
             minPremium: 5000,
           },
         ],
+      },
+      {
+        id: "geminia_lou",
+        type: "LOSS_OF_USE",
+        name: "Loss of Use / Courtesy Car",
+        isToggleable: true,
+        bands: [],
+        options: [
+          {
+            id: "lou_10",
+            label: "10 Days (Limit: KES 30,000)",
+            premium: 4500,
+          },
+          {
+            id: "lou_20",
+            label: "20 Days (Limit: KES 60,000)",
+            premium: 9000,
+          },
+          {
+            id: "lou_30",
+            label: "30 Days (Limit: KES 90,000)",
+            premium: 13500,
+          },
+        ],
+        meta: {
+          description:
+            "Provides a replacement vehicle while yours is being repaired.",
+        },
       },
     ],
   },

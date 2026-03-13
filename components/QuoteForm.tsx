@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { useQuoteEngine } from "@/hooks/useQuoteEngine";
 import VehicleInputForm from "./VehicleInputForm";
 import UniversalRiderToggles from "./UniversalRiderToggles";
@@ -20,13 +19,14 @@ export default function QuoteForm() {
     displayedCoverType,
     comparisonQuotes,
     handleRiderToggle,
+    handleRiderOptionChange,
     handleSelectQuote,
   } = useQuoteEngine();
 
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
       <form className="space-y-4">
-        <VehicleInputForm 
+        <VehicleInputForm
           vehicleValue={vehicleValue}
           setVehicleValue={setVehicleValue}
           yom={yom}
@@ -38,9 +38,10 @@ export default function QuoteForm() {
         />
 
         {products && displayedCoverType === "COMPREHENSIVE" && (
-          <UniversalRiderToggles 
+          <UniversalRiderToggles
             selectedRiderTypes={selectedRiderTypes}
             handleRiderToggle={handleRiderToggle}
+            handleRiderOptionChange={handleRiderOptionChange}
           />
         )}
 
@@ -49,7 +50,7 @@ export default function QuoteForm() {
         )}
       </form>
 
-      <QuoteMarketplace 
+      <QuoteMarketplace
         comparisonQuotes={comparisonQuotes}
         isSubmitting={isSubmitting}
         handleSelectQuote={handleSelectQuote}
