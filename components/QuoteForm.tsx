@@ -86,6 +86,7 @@ export default function QuoteForm() {
         insurerUpgrades={insurerUpgrades}
         handleInsurerRiderToggle={handleInsurerRiderToggle}
         handleInsurerRiderOptionChange={handleInsurerRiderOptionChange}
+        displayedCoverType={displayedCoverType}
       />
     </div>
   );

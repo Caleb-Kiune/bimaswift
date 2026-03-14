@@ -26,6 +26,7 @@ interface Props {
     type: string,
     optionId: string,
   ) => void;
+  displayedCoverType: "COMPREHENSIVE" | "TPO";
 }
 
 export default function QuoteMarketplace({
@@ -36,6 +37,7 @@ export default function QuoteMarketplace({
   insurerUpgrades,
   handleInsurerRiderToggle,
   handleInsurerRiderOptionChange,
+  displayedCoverType,
 }: Props) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
 
@@ -185,84 +187,85 @@ export default function QuoteMarketplace({
                 </div>
 
                 {/* --- THE NEW SPECIALTY UPGRADES SECTION --- */}
-                {specialtyRiders.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-200 bg-blue-50/50 -mx-4 px-4 pb-4">
-                    <h5 className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-3 pt-2">
-                      {comp.insurerName} Upgrades
-                    </h5>
-                    <div className="space-y-3">
-                      {specialtyRiders.map((rider) => {
-                        const isSelected =
-                          !!insurerUpgrades[comp.insurerId]?.[rider.type];
-                        const currentOption =
-                          typeof insurerUpgrades[comp.insurerId]?.[
-                            rider.type
-                          ] === "string"
-                            ? insurerUpgrades[comp.insurerId][rider.type]
-                            : rider.options?.[0]?.id || "";
+                {displayedCoverType === "COMPREHENSIVE" &&
+                  specialtyRiders.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-200 bg-blue-50/50 -mx-4 px-4 pb-4">
+                      <h5 className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-3 pt-2">
+                        {comp.insurerName} Upgrades
+                      </h5>
+                      <div className="space-y-3">
+                        {specialtyRiders.map((rider) => {
+                          const isSelected =
+                            !!insurerUpgrades[comp.insurerId]?.[rider.type];
+                          const currentOption =
+                            typeof insurerUpgrades[comp.insurerId]?.[
+                              rider.type
+                            ] === "string"
+                              ? insurerUpgrades[comp.insurerId][rider.type]
+                              : rider.options?.[0]?.id || "";
 
-                        return (
-                          <div
-                            key={rider.id}
-                            className="flex flex-col space-y-2"
-                          >
-                            <label className="flex items-center space-x-3 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => {
-                                  handleInsurerRiderToggle(
-                                    comp.insurerId,
-                                    rider.type,
-                                  );
-                                  if (
-                                    !isSelected &&
-                                    rider.options &&
-                                    rider.options.length > 0
-                                  ) {
-                                    handleInsurerRiderOptionChange(
+                          return (
+                            <div
+                              key={rider.id}
+                              className="flex flex-col space-y-2"
+                            >
+                              <label className="flex items-center space-x-3 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => {
+                                    handleInsurerRiderToggle(
                                       comp.insurerId,
                                       rider.type,
-                                      rider.options[0].id,
                                     );
-                                  }
-                                }}
-                                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                              />
-                              <span className="text-sm font-medium text-gray-700">
-                                {rider.name}
-                              </span>
-                            </label>
-
-                            {isSelected &&
-                              rider.options &&
-                              rider.options.length > 0 && (
-                                <div className="ml-7 pl-2 border-l-2 border-blue-300 transition-all duration-300">
-                                  <select
-                                    value={currentOption}
-                                    onChange={(e) =>
+                                    if (
+                                      !isSelected &&
+                                      rider.options &&
+                                      rider.options.length > 0
+                                    ) {
                                       handleInsurerRiderOptionChange(
                                         comp.insurerId,
                                         rider.type,
-                                        e.target.value,
-                                      )
+                                        rider.options[0].id,
+                                      );
                                     }
-                                    className="mt-1 block w-full pl-3 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md shadow-sm"
-                                  >
-                                    {rider.options.map((opt) => (
-                                      <option key={opt.id} value={opt.id}>
-                                        {opt.label}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
-                          </div>
-                        );
-                      })}
+                                  }}
+                                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <span className="text-sm font-medium text-gray-700">
+                                  {rider.name}
+                                </span>
+                              </label>
+
+                              {isSelected &&
+                                rider.options &&
+                                rider.options.length > 0 && (
+                                  <div className="ml-7 pl-2 border-l-2 border-blue-300 transition-all duration-300">
+                                    <select
+                                      value={currentOption}
+                                      onChange={(e) =>
+                                        handleInsurerRiderOptionChange(
+                                          comp.insurerId,
+                                          rider.type,
+                                          e.target.value,
+                                        )
+                                      }
+                                      className="mt-1 block w-full pl-3 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md shadow-sm"
+                                    >
+                                      {rider.options.map((opt) => (
+                                        <option key={opt.id} value={opt.id}>
+                                          {opt.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Action Button */}
                 <div className="pt-2">
