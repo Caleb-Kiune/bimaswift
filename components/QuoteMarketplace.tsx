@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { QuoteBreakdown } from "@/types";
+import { QuoteBreakdown, InsuranceProduct } from "@/types";
 
 interface ComparisonQuote {
   insurerId: string;
@@ -18,12 +18,24 @@ interface Props {
     quote: QuoteBreakdown,
     riderIds: string[],
   ) => void;
+  products: InsuranceProduct[] | null;
+  insurerUpgrades: Record<string, Record<string, any>>;
+  handleInsurerRiderToggle: (insurerId: string, type: string) => void;
+  handleInsurerRiderOptionChange: (
+    insurerId: string,
+    type: string,
+    optionId: string,
+  ) => void;
 }
 
 export default function QuoteMarketplace({
   comparisonQuotes,
   isSubmitting,
   handleSelectQuote,
+  products,
+  insurerUpgrades,
+  handleInsurerRiderToggle,
+  handleInsurerRiderOptionChange,
 }: Props) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
 
@@ -46,6 +58,13 @@ export default function QuoteMarketplace({
       {comparisonQuotes.map((comp) => {
         const isExpanded = expandedIds.includes(comp.insurerId);
 
+        const product = products?.find((p) => p.insurerId === comp.insurerId);
+
+        const specialtyRiders =
+          product?.riders.filter(
+            (r) => r.type !== "PVT" && r.type !== "EXCESS_PROTECTOR",
+          ) || [];
+
         return (
           <div
             key={comp.insurerId}
@@ -58,14 +77,12 @@ export default function QuoteMarketplace({
                   {comp.insurerName}
                 </span>
 
-                {/* UPGRADED SUBTITLE WITH FREE RIDER BADGE */}
                 <div className="flex flex-wrap items-center gap-2 mt-1">
                   <span className="text-xs text-gray-500">
                     Basic Premium + {comp.quote.calculatedRiders.length} Rider
                     {comp.quote.calculatedRiders.length === 1 ? "" : "s"}
                   </span>
 
-                  {/* Dynamic Free Perk Badge */}
                   {comp.quote.calculatedRiders.filter((r) => r.premium === 0)
                     .length > 0 && (
                     <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide">
@@ -116,11 +133,11 @@ export default function QuoteMarketplace({
                   </div>
                 </div>
 
-                {/* Optional Riders */}
+                {/* Applied Riders List */}
                 {comp.quote.calculatedRiders.length > 0 && (
                   <div>
                     <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                      Optional Riders
+                      Applied Riders
                     </div>
                     <div className="space-y-1">
                       {comp.quote.calculatedRiders.map((rider) => (
@@ -166,6 +183,86 @@ export default function QuoteMarketplace({
                     </div>
                   </div>
                 </div>
+
+                {/* --- THE NEW SPECIALTY UPGRADES SECTION --- */}
+                {specialtyRiders.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 bg-blue-50/50 -mx-4 px-4 pb-4">
+                    <h5 className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-3 pt-2">
+                      {comp.insurerName} Upgrades
+                    </h5>
+                    <div className="space-y-3">
+                      {specialtyRiders.map((rider) => {
+                        const isSelected =
+                          !!insurerUpgrades[comp.insurerId]?.[rider.type];
+                        const currentOption =
+                          typeof insurerUpgrades[comp.insurerId]?.[
+                            rider.type
+                          ] === "string"
+                            ? insurerUpgrades[comp.insurerId][rider.type]
+                            : rider.options?.[0]?.id || "";
+
+                        return (
+                          <div
+                            key={rider.id}
+                            className="flex flex-col space-y-2"
+                          >
+                            <label className="flex items-center space-x-3 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => {
+                                  handleInsurerRiderToggle(
+                                    comp.insurerId,
+                                    rider.type,
+                                  );
+                                  if (
+                                    !isSelected &&
+                                    rider.options &&
+                                    rider.options.length > 0
+                                  ) {
+                                    handleInsurerRiderOptionChange(
+                                      comp.insurerId,
+                                      rider.type,
+                                      rider.options[0].id,
+                                    );
+                                  }
+                                }}
+                                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                              />
+                              <span className="text-sm font-medium text-gray-700">
+                                {rider.name}
+                              </span>
+                            </label>
+
+                            {isSelected &&
+                              rider.options &&
+                              rider.options.length > 0 && (
+                                <div className="ml-7 pl-2 border-l-2 border-blue-300 transition-all duration-300">
+                                  <select
+                                    value={currentOption}
+                                    onChange={(e) =>
+                                      handleInsurerRiderOptionChange(
+                                        comp.insurerId,
+                                        rider.type,
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="mt-1 block w-full pl-3 pr-10 py-1.5 text-sm border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md shadow-sm"
+                                  >
+                                    {rider.options.map((opt) => (
+                                      <option key={opt.id} value={opt.id}>
+                                        {opt.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Action Button */}
                 <div className="pt-2">

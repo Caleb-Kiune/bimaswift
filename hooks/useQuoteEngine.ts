@@ -13,8 +13,10 @@ export function useQuoteEngine() {
   );
   const [products, setProducts] = useState<InsuranceProduct[] | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedRiderTypes, setSelectedRiderTypes] = useState<
-    Record<string, any>
+  const [globalRiders, setGlobalRiders] = useState<Record<string, boolean>>({});
+
+  const [insurerUpgrades, setInsurerUpgrades] = useState<
+    Record<string, Record<string, any>>
   >({});
 
   useEffect(() => {
@@ -37,9 +39,14 @@ export function useQuoteEngine() {
   const comparisonQuotes =
     products && vehicleValue !== "" && yom !== ""
       ? products.map((product) => {
+          const combinedRidersForThisCard = {
+            ...globalRiders,
+            ...(insurerUpgrades[product.insurerId] || {}),
+          };
+
           const productSpecificRiderIds = product.riders
             .filter((rider) => {
-              if (selectedRiderTypes[rider.type]) return true;
+              if (combinedRidersForThisCard[rider.type]) return true;
 
               const activeBand = rider.bands.find(
                 (b) =>
@@ -54,8 +61,8 @@ export function useQuoteEngine() {
               return false;
             })
             .map((rider) => {
-              const selected = selectedRiderTypes[rider.type];
-              if (typeof selected === "string") return selected;
+              const selectedValue = combinedRidersForThisCard[rider.type];
+              if (typeof selectedValue === "string") return selectedValue;
               return rider.id;
             });
 
@@ -75,21 +82,41 @@ export function useQuoteEngine() {
         })
       : null;
 
-  const handleRiderToggle = (riderType: string) => {
-    setSelectedRiderTypes((prev) => {
-      if (prev[riderType]) {
-        const { [riderType]: _, ...rest } = prev;
-        return rest;
-      }
-      return { ...prev, [riderType]: true };
+  const handleGlobalRiderToggle = (type: string) => {
+    setGlobalRiders((prev) => ({
+      ...prev,
+      [type]: !prev[type],
+    }));
+  };
+
+  const handleInsurerRiderToggle = (insurerId: string, type: string) => {
+    setInsurerUpgrades((prev) => {
+      const currentInsurerState = prev[insurerId] || {};
+      return {
+        ...prev,
+        [insurerId]: {
+          ...currentInsurerState,
+          [type]: !currentInsurerState[type], // Flip it on/off
+        },
+      };
     });
   };
 
-  const handleRiderOptionChange = (riderType: string, optionId: string) => {
-    setSelectedRiderTypes((prev) => ({
-      ...prev,
-      [riderType]: optionId,
-    }));
+  const handleInsurerRiderOptionChange = (
+    insurerId: string,
+    type: string,
+    optionId: string,
+  ) => {
+    setInsurerUpgrades((prev) => {
+      const currentInsurerState = prev[insurerId] || {};
+      return {
+        ...prev,
+        [insurerId]: {
+          ...currentInsurerState,
+          [type]: optionId,
+        },
+      };
+    });
   };
 
   const handleSelectQuote = async (
@@ -155,12 +182,14 @@ export function useQuoteEngine() {
     setCoverType,
     products,
     isSubmitting,
-    selectedRiderTypes,
     forceTpo,
     displayedCoverType,
     comparisonQuotes,
-    handleRiderToggle,
-    handleRiderOptionChange,
     handleSelectQuote,
+    globalRiders,
+    insurerUpgrades,
+    handleGlobalRiderToggle,
+    handleInsurerRiderToggle,
+    handleInsurerRiderOptionChange,
   };
 }
