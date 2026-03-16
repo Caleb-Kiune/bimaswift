@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 
 export async function POST(req: Request) {
   try {
@@ -21,6 +22,8 @@ export async function POST(req: Request) {
         selectedRiderIds,
       },
     });
+
+    revalidatePath("/dashboard")
     return Response.json({ success: true, quote: savedQuote }, { status: 201 });
   } catch (error) {
     console.error("Error saving quote to database:", error);

@@ -3,9 +3,12 @@ import calculateMotorPremium from "@/lib/engine";
 import { InsuranceProduct, QuoteBreakdown } from "@/types";
 import { formatWhatsAppQuote } from "@/lib/utils/formatters";
 import { UNDERWRITING_RULES } from "@/lib/constants";
+import { useRouter } from "next/navigation";
 import { v4 } from "uuid";
 
 export function useQuoteEngine() {
+  const router = useRouter();
+
   const [vehicleValue, setVehicleValue] = useState<number | "">("");
   const [yom, setYom] = useState<number | "">("");
   const [coverType, setCoverType] = useState<"COMPREHENSIVE" | "TPO">(
@@ -16,7 +19,7 @@ export function useQuoteEngine() {
   const [globalRiders, setGlobalRiders] = useState<Record<string, boolean>>({});
 
   const [insurerUpgrades, setInsurerUpgrades] = useState<
-    Record<string, Record<string, any>>
+    Record<string, Record<string, string | boolean>>
   >({});
 
   useEffect(() => {
@@ -145,7 +148,9 @@ export function useQuoteEngine() {
 
       if (!res.ok) throw new Error("Failed to save quote");
 
-      const savedQuote = await res.json();
+      router.refresh();
+
+      await res.json();
 
       const selectedProduct = products?.find((p) => p.insurerId === insurerId);
       const insurerName = selectedProduct?.insurerName || "Selected Insurer";
