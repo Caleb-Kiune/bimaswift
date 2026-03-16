@@ -1,31 +1,32 @@
-import { NextResponse } from "next/server";
-import calculateMotorPremium from "@/lib/engine";
-import { activeProducts } from "@/lib/data/insurers";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { vehicleValue, yom, coverType, insurerId, selectedRiderIds } = body;
-
-    if (!vehicleValue || !yom || !coverType || !insurerId) {
-      return new NextResponse("Missing required fields", { status: 400 });
-    }
-
-    const product = activeProducts.find((p) => p.insurerId === insurerId);
-    if (!product) {
-      return new NextResponse("Invalid Insurer ID", { status: 400 });
-    }
-
-    const quoteBreakdown = calculateMotorPremium(
+    const {
+      idempotencyKey,
       vehicleValue,
+      yom,
       coverType,
-      product,
-      selectedRiderIds || [],
-    );
+      insurerId,
+      selectedRiderIds,
+    } = await req.json();
 
-    return NextResponse.json({ quote: quoteBreakdown });
+    const savedQuote = await prisma.quote.create({
+      data: {
+        idempotencyKey,
+        vehicleValue,
+        yom,
+        coverType,
+        insurerId,
+        selectedRiderIds,
+      },
+    });
+    return Response.json({ success: true, quote: savedQuote }, { status: 201 });
   } catch (error) {
-    console.error("[QUOTES_POST]", error);
-    return new NextResponse("Internal Error", { status: 500 });
+    console.error("Error saving quote to database:", error);
+    return Response.json(
+      { success: false, error: "Failed to save quote" },
+      { status: 500 },
+    );
   }
 }
