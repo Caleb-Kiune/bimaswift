@@ -27,58 +27,75 @@ export default function QuoteForm() {
   } = useQuoteEngine();
 
   return (
-    <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-      <form className="space-y-4">
-        <VehicleInputForm
-          vehicleValue={vehicleValue}
-          setVehicleValue={setVehicleValue}
-          yom={yom}
-          setYom={setYom}
-          displayedCoverType={displayedCoverType}
-          setCoverType={setCoverType}
-          forceTpo={forceTpo}
-          isSubmitting={isSubmitting}
-        />
+    <div className="w-full max-w-2xl mx-auto space-y-6">
+      {/* THE INPUT SECTION */}
+      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm">
+        <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+          <VehicleInputForm
+            vehicleValue={vehicleValue}
+            setVehicleValue={setVehicleValue}
+            yom={yom}
+            setYom={setYom}
+            displayedCoverType={displayedCoverType}
+            setCoverType={setCoverType}
+            forceTpo={forceTpo}
+            isSubmitting={isSubmitting}
+          />
 
-        {/* GLOBAL COMMODITY RIDERS */}
-        {displayedCoverType === "COMPREHENSIVE" && (
-          <div className="bg-white p-4 rounded-md border border-gray-200 mt-4 shadow-sm">
-            <h4 className="text-sm font-semibold text-gray-800 mb-3">
-              Standard Upgrades (Applies to all quotes)
-            </h4>
-            <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-6">
-              {/* PVT Global Toggle */}
-              <label className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!!globalRiders["PVT"]}
-                  onChange={() => handleGlobalRiderToggle("PVT")}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">
-                  Political Violence & Terrorism (PVT)
-                </span>
-              </label>
+          {/* GLOBAL COMMODITY RIDERS (Sleek Toggle Bar) */}
+          {displayedCoverType === "COMPREHENSIVE" && (
+            <div className="pt-5 border-t border-zinc-100">
+              <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">
+                Global Upgrades (Applies to all quotes)
+              </h4>
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
+                {/* PVT Toggle */}
+                <label className="flex items-center justify-between sm:justify-start gap-3 cursor-pointer group">
+                  <span className="text-sm font-medium text-zinc-700 group-hover:text-zinc-900 transition-colors">
+                    Political Violence (PVT)
+                  </span>
+                  <div className="relative inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={!!globalRiders["PVT"]}
+                      onChange={() => handleGlobalRiderToggle("PVT")}
+                    />
+                    <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                  </div>
+                </label>
 
-              {/* Excess Protector Global Toggle */}
-              <label className="flex items-center space-x-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={!!globalRiders["EXCESS_PROTECTOR"]}
-                  onChange={() => handleGlobalRiderToggle("EXCESS_PROTECTOR")}
-                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700">Excess Protector</span>
-              </label>
+                {/* Excess Protector Toggle */}
+                <label className="flex items-center justify-between sm:justify-start gap-3 cursor-pointer group">
+                  <span className="text-sm font-medium text-zinc-700 group-hover:text-zinc-900 transition-colors">
+                    Excess Protector
+                  </span>
+                  <div className="relative inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={!!globalRiders["EXCESS_PROTECTOR"]}
+                      onChange={() =>
+                        handleGlobalRiderToggle("EXCESS_PROTECTOR")
+                      }
+                    />
+                    <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                  </div>
+                </label>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {!products && (
-          <p className="text-sm text-gray-500">Loading active rates ...</p>
-        )}
-      </form>
+          {!products && (
+            <div className="pt-4 flex items-center gap-3 text-zinc-500 text-sm font-medium animate-pulse">
+              <div className="w-4 h-4 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin"></div>
+              Syncing live market rates...
+            </div>
+          )}
+        </form>
+      </div>
 
+      {/* THE MARKETPLACE */}
       <QuoteMarketplace
         comparisonQuotes={comparisonQuotes}
         isSubmitting={isSubmitting}
