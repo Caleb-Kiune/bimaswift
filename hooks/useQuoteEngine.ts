@@ -138,7 +138,7 @@ export function useQuoteEngine() {
 
     try {
       await navigator.clipboard.writeText(whatsappMessage);
-      alert("Quote copied to clipboard! Ready to paste in WhatsApp.");
+      alert("Quote copied to clipboard!");
     } catch (err) {
       console.error("Failed to copy to clipboard:", err);
       alert("Failed to copy quote.");
