@@ -61,7 +61,7 @@ export default function VehicleInputForm({
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-5 max-w-md mx-auto">
         {/* VEHICLE VALUE INPUT */}
         <div className="space-y-1.5">
           <label className="text-sm font-semibold text-zinc-700">
