@@ -46,7 +46,7 @@ export default function QuoteForm() {
           {displayedCoverType === "COMPREHENSIVE" && (
             <div className="pt-5 border-t border-zinc-100">
               <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">
-                Global Upgrades (Applies to all quotes)
+                Optional Add-Ons 
               </h4>
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
                 {/* PVT Toggle */}

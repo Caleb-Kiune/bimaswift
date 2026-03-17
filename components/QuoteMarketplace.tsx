@@ -355,7 +355,7 @@ export default function QuoteMarketplace({
                     specialtyRiders.length > 0 && (
                       <div className="mt-4 pt-4 border-t border-zinc-200 bg-zinc-50 rounded-xl p-4">
                         <h5 className="text-xs font-bold text-zinc-800 uppercase tracking-wider mb-4">
-                          Optional {comp.insurerName} Upgrades
+                          Optional Add-Ons
                         </h5>
                         <div className="space-y-5">
                           {specialtyRiders.map((rider) => {
