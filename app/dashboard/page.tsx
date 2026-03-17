@@ -1,18 +1,26 @@
 import { UserButton } from "@clerk/nextjs";
-import QuoteForm from "@/components/QuoteForm";
 import { prisma } from "@/lib/prisma";
 import { Quote } from "@prisma/client";
+import { auth } from "@clerk/nextjs/server";
 
 export default async function Dashboard() {
+  // 1. Grab the active user's ID
+  const { userId } = await auth();
   let fetchedQuotes: Quote[] = [];
 
   try {
-    fetchedQuotes = await prisma.quote.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 3
-    });
+    // 2. Fetch only their quotes
+    if (userId) {
+      fetchedQuotes = await prisma.quote.findMany({
+        where: {
+          userId: userId,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 10 // Show top 10 recent
+      });
+    }
   } catch (error) {
     console.error("Error getting saved quotes", error);
   }
@@ -22,18 +30,11 @@ export default async function Dashboard() {
       <div className="w-full max-w-2xl space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-800">
-            Quoting Engine Dashboard
+            Saved Quotes
           </h1>
-          <UserButton />
         </div>
 
-        <QuoteForm />
-
-        <div className="mt-12 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">
-            Recent Quotes
-          </h2>
-
+        <div className="mt-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
           {fetchedQuotes.length === 0 ? (
             <p className="text-sm text-gray-500">No quotes saved yet.</p>
           ) : (

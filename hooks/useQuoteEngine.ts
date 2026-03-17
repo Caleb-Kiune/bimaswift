@@ -99,7 +99,7 @@ export function useQuoteEngine() {
         ...prev,
         [insurerId]: {
           ...currentInsurerState,
-          [type]: !currentInsurerState[type], // Flip it on/off
+          [type]: !currentInsurerState[type],
         },
       };
     });
@@ -122,11 +122,30 @@ export function useQuoteEngine() {
     });
   };
 
-  const handleSelectQuote = async (
+  const handleCopyQuote = async (
     insurerId: string,
     quoteBreakdown: QuoteBreakdown,
-    riderIds: string[],
   ) => {
+    const selectedProduct = products?.find((p) => p.insurerId === insurerId);
+    const insurerName = selectedProduct?.insurerName || "Selected Insurer";
+
+    const whatsappMessage = formatWhatsAppQuote(
+      insurerName,
+      vehicleValue as number,
+      displayedCoverType,
+      quoteBreakdown,
+    );
+
+    try {
+      await navigator.clipboard.writeText(whatsappMessage);
+      alert("Quote copied to clipboard! Ready to paste in WhatsApp.");
+    } catch (err) {
+      console.error("Failed to copy to clipboard:", err);
+      alert("Failed to copy quote.");
+    }
+  };
+
+  const handleSaveQuote = async (insurerId: string, riderIds: string[]) => {
     setIsSubmitting(true);
     const idempotencyKey = v4();
 
@@ -146,30 +165,13 @@ export function useQuoteEngine() {
         body: JSON.stringify(vehicleData),
       });
 
-      if (!res.ok) throw new Error("Failed to save quote");
-
-      router.refresh();
+      if (!res.ok) {
+        throw new Error("Failed to save quote");
+      }
 
       await res.json();
-
-      const selectedProduct = products?.find((p) => p.insurerId === insurerId);
-      const insurerName = selectedProduct?.insurerName || "Selected Insurer";
-
-      const whatsappMessage = formatWhatsAppQuote(
-        insurerName,
-        vehicleValue,
-        displayedCoverType,
-        quoteBreakdown,
-      );
-
-      try {
-        await navigator.clipboard.writeText(whatsappMessage);
-        alert(
-          "Quote saved to database and copied to clipboard! Ready to paste in WhatsApp.",
-        );
-      } catch (err) {
-        console.error("Failed to copy to clipboard:", err);
-      }
+      router.refresh();
+      alert("Quote successfully saved to your Dashboard!");
     } catch (err) {
       console.error("Error submitting quote", err);
       alert("Failed to save quote to database.");
@@ -190,7 +192,8 @@ export function useQuoteEngine() {
     forceTpo,
     displayedCoverType,
     comparisonQuotes,
-    handleSelectQuote,
+    handleCopyQuote,
+    handleSaveQuote,
     globalRiders,
     insurerUpgrades,
     handleGlobalRiderToggle,

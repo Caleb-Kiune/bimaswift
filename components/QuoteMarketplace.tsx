@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { QuoteBreakdown, InsuranceProduct } from "@/types";
+import { Show, SignInButton } from "@clerk/nextjs";
 
 interface ComparisonQuote {
   insurerId: string;
@@ -13,11 +14,8 @@ interface ComparisonQuote {
 interface Props {
   comparisonQuotes: ComparisonQuote[] | null;
   isSubmitting: boolean;
-  handleSelectQuote: (
-    insurerId: string,
-    quote: QuoteBreakdown,
-    riderIds: string[],
-  ) => void;
+  handleCopyQuote: (insurerId: string, quote: QuoteBreakdown) => void;
+  handleSaveQuote: (insurerId: string, riderIds: string[]) => void;
   products: InsuranceProduct[] | null;
   insurerUpgrades: Record<string, Record<string, any>>;
   handleInsurerRiderToggle: (insurerId: string, type: string) => void;
@@ -32,7 +30,8 @@ interface Props {
 export default function QuoteMarketplace({
   comparisonQuotes,
   isSubmitting,
-  handleSelectQuote,
+  handleCopyQuote,
+  handleSaveQuote,
   products,
   insurerUpgrades,
   handleInsurerRiderToggle,
@@ -72,7 +71,7 @@ export default function QuoteMarketplace({
             key={comp.insurerId}
             className="bg-gray-50 rounded-md border border-gray-200 overflow-hidden transition-all duration-200 shadow-sm"
           >
-            {/* --- VISIBLE HEADER --- */}
+            {/* HEADER */}
             <div className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white">
               <div>
                 <span className="font-bold text-lg text-blue-900">
@@ -118,7 +117,7 @@ export default function QuoteMarketplace({
               </div>
             </div>
 
-            {/* --- EXPANDABLE RECEIPT SECTION --- */}
+            {/* EXPANDABLE RECEIPT SECTION */}
             {isExpanded && (
               <div className="p-4 bg-gray-50 border-t border-gray-200 text-sm space-y-4">
                 {/* Basic Premium */}
@@ -186,7 +185,7 @@ export default function QuoteMarketplace({
                   </div>
                 </div>
 
-                {/* --- THE NEW SPECIALTY UPGRADES SECTION --- */}
+                {/* THE NEW SPECIALTY UPGRADES SECTION */}
                 {displayedCoverType === "COMPREHENSIVE" &&
                   specialtyRiders.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-gray-200 bg-blue-50/50 -mx-4 px-4 pb-4">
@@ -267,23 +266,37 @@ export default function QuoteMarketplace({
                     </div>
                   )}
 
-                {/* Action Button */}
-                <div className="pt-2">
+                {/* ACTION BUTTONS */}
+                <div className="pt-3 space-y-2 border-t border-gray-200 mt-2">
+                  {/* Primary Action: Free to everyone */}
                   <button
-                    onClick={() =>
-                      handleSelectQuote(
-                        comp.insurerId,
-                        comp.quote,
-                        comp.riderIds,
-                      )
-                    }
-                    disabled={isSubmitting}
-                    className="w-full bg-blue-600 text-white py-2.5 rounded-md text-sm font-medium hover:bg-blue-700 disabled:bg-gray-400 transition shadow-sm"
+                    onClick={() => handleCopyQuote(comp.insurerId, comp.quote)}
+                    className="w-full bg-green-600 text-white py-2.5 rounded-md text-sm font-medium hover:bg-green-700 transition shadow-sm"
                   >
-                    {isSubmitting
-                      ? "Saving Quote..."
-                      : `Select ${comp.insurerName}`}
+                    Copy Quote
                   </button>
+
+                  {/* Secondary Action: Logged In Only */}
+                  <Show when="signed-in">
+                    <button
+                      onClick={() =>
+                        handleSaveQuote(comp.insurerId, comp.riderIds)
+                      }
+                      disabled={isSubmitting}
+                      className="w-full bg-white border border-gray-300 text-gray-700 py-2 rounded-md text-sm font-medium hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 transition shadow-sm"
+                    >
+                      {isSubmitting ? "Saving..." : "Save to Dashboard"}
+                    </button>
+                  </Show>
+
+                  {/* Secondary Action Hook: Logged Out */}
+                  <Show when="signed-out">
+                    <SignInButton mode="modal" fallbackRedirectUrl="/">
+                      <button className="w-full bg-white border border-gray-300 text-gray-700 py-2 rounded-md text-sm font-medium hover:bg-gray-50 transition shadow-sm">
+                        Sign in to Save
+                      </button>
+                    </SignInButton>
+                  </Show>
                 </div>
               </div>
             )}

@@ -1,12 +1,17 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-const isProtectedRoute = createRouteMatcher(["/dashboard","/api"]);
+// 1. Removed "/" so the homepage is public.
+// 2. Added "(.*)" to dashboard to protect any future sub-pages (like /dashboard/settings).
+// 3. Specifically targeted "/api/quotes" so "/api/rates/active" remains public for the calculator!
+const isProtectedRoute = createRouteMatcher([
+  "/dashboard(.*)",
+  "/api/quotes(.*)" 
+]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
     await auth.protect();
   }
-
 });
 
 export const config = {

@@ -17,7 +17,8 @@ export default function QuoteForm() {
     forceTpo,
     displayedCoverType,
     comparisonQuotes,
-    handleSelectQuote,
+    handleCopyQuote,
+    handleSaveQuote,
     globalRiders,
     handleGlobalRiderToggle,
     insurerUpgrades,
@@ -39,7 +40,7 @@ export default function QuoteForm() {
           isSubmitting={isSubmitting}
         />
 
-        {/* --- GLOBAL COMMODITY RIDERS --- */}
+        {/* GLOBAL COMMODITY RIDERS */}
         {displayedCoverType === "COMPREHENSIVE" && (
           <div className="bg-white p-4 rounded-md border border-gray-200 mt-4 shadow-sm">
             <h4 className="text-sm font-semibold text-gray-800 mb-3">
@@ -81,7 +82,8 @@ export default function QuoteForm() {
       <QuoteMarketplace
         comparisonQuotes={comparisonQuotes}
         isSubmitting={isSubmitting}
-        handleSelectQuote={handleSelectQuote}
+        handleCopyQuote={handleCopyQuote}
+        handleSaveQuote={handleSaveQuote}
         products={products}
         insurerUpgrades={insurerUpgrades}
         handleInsurerRiderToggle={handleInsurerRiderToggle}

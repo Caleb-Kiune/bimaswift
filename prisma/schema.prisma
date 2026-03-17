@@ -20,4 +20,5 @@ model Quote {
   insurerId        String
   selectedRiderIds String[]
   createdAt        DateTime @default(now())
+  userId           String
 }
