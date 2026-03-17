@@ -153,12 +153,39 @@ export default function QuoteMarketplace({
 }: Props) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
 
-  // 1. Memoize sorting
-  const sortedQuotes = useMemo(() => {
-    if (!comparisonQuotes) return [];
-    return [...comparisonQuotes].sort(
-      (a, b) => a.quote.totalPayable - b.quote.totalPayable,
-    );
+  // Stable sorting state to prevent layout jumps when quotes update
+  const [sortedQuotes, setSortedQuotes] = useState<ComparisonQuote[]>([]);
+
+  useEffect(() => {
+    // If no quotes, reset state
+    if (!comparisonQuotes || comparisonQuotes.length === 0) {
+      setSortedQuotes([]);
+      return;
+    }
+
+    setSortedQuotes((prev) => {
+      // Initial sort: When data first arrives, sort by price
+      if (prev.length === 0) {
+        return [...comparisonQuotes].sort(
+          (a, b) => a.quote.totalPayable - b.quote.totalPayable,
+        );
+      }
+
+      // Update existing quotes in their current positions, remove any that are gone
+      const updatedExisting = prev
+        .map((existing) =>
+          comparisonQuotes.find((q) => q.insurerId === existing.insurerId),
+        )
+        .filter((q): q is ComparisonQuote => !!q);
+
+      // If new quotes appeared (not in our original sorted set), append to end
+      const existingIds = new Set(updatedExisting.map((q) => q.insurerId));
+      const additions = comparisonQuotes.filter(
+        (q) => !existingIds.has(q.insurerId),
+      );
+
+      return [...updatedExisting, ...additions];
+    });
   }, [comparisonQuotes]);
 
   // Empty state handling
@@ -174,8 +201,6 @@ export default function QuoteMarketplace({
       </div>
     );
   }
-
-  const cheapestInsurerId = sortedQuotes[0].insurerId;
 
   const toggleExpand = (insurerId: string) => {
     setExpandedIds((prev) =>
@@ -196,7 +221,6 @@ export default function QuoteMarketplace({
 
       {sortedQuotes.map((comp) => {
         const isExpanded = expandedIds.includes(comp.insurerId);
-        const isCheapest = comp.insurerId === cheapestInsurerId;
         const product = products?.find((p) => p.insurerId === comp.insurerId);
 
         const specialtyRiders =
@@ -207,19 +231,8 @@ export default function QuoteMarketplace({
         return (
           <div
             key={comp.insurerId}
-            className={`relative bg-white rounded-2xl border transition-all duration-200 shadow-sm ${
-              isCheapest
-                ? "border-indigo-500 ring-1 ring-indigo-500"
-                : "border-zinc-200 hover:border-zinc-300"
-            }`}
+            className="relative bg-white rounded-2xl border border-zinc-200 hover:border-zinc-300 transition-all duration-200 shadow-sm"
           >
-            {/* Badge and Header */}
-            {isCheapest && (
-              <div className="absolute -top-3 left-4 bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-md z-10">
-                Most Affordable
-              </div>
-            )}
-
             <button
               className="w-full text-left p-5 cursor-pointer flex flex-col sm:flex-row justify-between items-start sm:items-center focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset rounded-2xl"
               onClick={() => toggleExpand(comp.insurerId)}
@@ -424,7 +437,6 @@ export default function QuoteMarketplace({
                         e.preventDefault();
                         e.stopPropagation();
                         handleCopyQuote(comp.insurerId, comp.quote);
-                        // Consider adding a toast notification here!
                       }}
                       className="w-full flex items-center justify-center gap-2 bg-zinc-900 text-white py-3.5 rounded-xl text-sm font-bold shadow-sm hover:bg-zinc-800 active:scale-[0.98] transition-all"
                     >
