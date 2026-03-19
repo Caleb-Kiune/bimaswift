@@ -1,5 +1,6 @@
-import { useState } from "react";
-import calculatePremium from "@/src/features/motor/utils/engine";
+import { useState, useRef, useMemo } from "react";
+import calculatePremium from "@/src/features/motor/core/engine";
+import { generateQuoteSignature, computePriceBasedRank, sortQuotesByLockedRank } from "@/src/features/motor/core/sorting";
 import { InsuranceProduct, QuoteBreakdown } from "@/src/features/motor/types";
 import { formatWhatsAppQuote } from "@/src/features/motor/utils/formatters";
 import { UNDERWRITING_RULES } from "@/src/features/motor/utils/constants";
@@ -32,7 +33,11 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
       currentYear - yom > UNDERWRITING_RULES.MAX_COMPREHENSIVE_AGE_YEARS);
   const displayedCoverType = forceTpo ? "TPO" : coverType;
 
-  const comparisonQuotes =
+  // 1. Establish the stateful tracker
+  const sortTrackerRef = useRef({ signature: "", lockedRank: [] as string[] });
+
+  // 2. Compute the raw, unsorted quotes based on user input 
+  const rawComparisonQuotes =
     products && vehicleValue !== "" && yom !== ""
       ? products.map((product) => {
           const combinedRidersForThisCard = {
@@ -77,6 +82,20 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
           };
         })
       : null;
+
+  // 3. Apply the pure functions against the stateful tracker
+  const comparisonQuotes = useMemo(() => {
+    if (!rawComparisonQuotes || rawComparisonQuotes.length === 0) return null;
+
+    const currentSignature = generateQuoteSignature(rawComparisonQuotes);
+
+    if (currentSignature !== sortTrackerRef.current.signature) {
+      sortTrackerRef.current.signature = currentSignature;
+      sortTrackerRef.current.lockedRank = computePriceBasedRank(rawComparisonQuotes);
+    }
+
+    return sortQuotesByLockedRank(rawComparisonQuotes, sortTrackerRef.current.lockedRank);
+  }, [rawComparisonQuotes]);
 
   const handleGlobalRiderToggle = (type: string) => {
     setGlobalRiders((prev) => ({

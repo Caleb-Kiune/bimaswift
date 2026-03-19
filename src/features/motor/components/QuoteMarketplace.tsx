@@ -153,11 +153,8 @@ export default function QuoteMarketplace({
 }: Props) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
 
- 
-// Stable sorting state to prevent layout jumps when quotes update
-  const sortedQuotes = [...(comparisonQuotes || [])].sort(
-    (a, b) => a.quote.totalPayable - b.quote.totalPayable,
-  );
+  // The quotes are already stably sorted by the Orchestrator Hook
+  const sortedQuotes = comparisonQuotes || [];
 
   // Empty state handling
   if (sortedQuotes.length === 0) {

@@ -1,4 +1,4 @@
-import { LEVIES } from "./constants";
+import { LEVIES } from "@/src/features/motor/utils/constants";
 import {
   RatingBand,
   TieredRider,
