@@ -3,8 +3,12 @@
 import { useQuoteEngine } from "@/src/features/motor/hooks/useQuoteEngine";
 import VehicleInputForm from "./VehicleInputForm";
 import QuoteMarketplace from "./QuoteMarketplace";
+import { InsuranceProduct } from "../types";
 
-export default function QuoteForm() {
+export default function QuoteForm({ initialProducts }: { initialProducts: InsuranceProduct[] }) {
+
+ 
+
   const {
     vehicleValue,
     setVehicleValue,
@@ -24,7 +28,7 @@ export default function QuoteForm() {
     insurerUpgrades,
     handleInsurerRiderToggle,
     handleInsurerRiderOptionChange,
-  } = useQuoteEngine();
+  } = useQuoteEngine(initialProducts);
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">

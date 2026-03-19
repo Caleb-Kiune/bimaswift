@@ -6,7 +6,7 @@ import { UNDERWRITING_RULES } from "@/src/features/motor/utils/constants";
 import { useRouter } from "next/navigation";
 import { v4 } from "uuid";
 
-export function useQuoteEngine() {
+export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   const router = useRouter();
 
   const [vehicleValue, setVehicleValue] = useState<number | "">("");
@@ -14,7 +14,7 @@ export function useQuoteEngine() {
   const [coverType, setCoverType] = useState<"COMPREHENSIVE" | "TPO">(
     "COMPREHENSIVE",
   );
-  const [products, setProducts] = useState<InsuranceProduct[] | null>(null);
+  const [products, setProducts] = useState<InsuranceProduct[] | null>(initialProducts);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [globalRiders, setGlobalRiders] = useState<Record<string, boolean>>({});
 
@@ -22,14 +22,7 @@ export function useQuoteEngine() {
     Record<string, Record<string, string | boolean>>
   >({});
 
-  useEffect(() => {
-    async function fetchRates() {
-      const res = await fetch("/api/rates/active");
-      const data = await res.json();
-      setProducts(data);
-    }
-    fetchRates();
-  }, []);
+  
 
   const currentYear = new Date().getFullYear();
   const forceTpo =
