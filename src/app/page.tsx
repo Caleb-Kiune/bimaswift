@@ -1,6 +1,5 @@
 import Link from "next/link";
 import QuoteForm from "@/src/features/motor/components/QuoteForm";
-import { InsuranceProduct } from "@/src/features/motor/types";
 import { getActiveMotorProducts } from "@/src/features/motor/services/products";
 
 export default async function Home({

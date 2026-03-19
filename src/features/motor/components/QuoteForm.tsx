@@ -14,7 +14,7 @@ export default function QuoteForm({ initialProducts }: { initialProducts: Insura
     setVehicleValue,
     yom,
     setYom,
-    coverType,
+    // coverType,
     setCoverType,
     products,
     isSubmitting,

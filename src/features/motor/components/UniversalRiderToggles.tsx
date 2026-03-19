@@ -1,7 +1,7 @@
 import React from "react";
 
 interface Props {
-  selectedRiderTypes: Record<string, any>;
+  selectedRiderTypes: Record<string, string | boolean>;
   handleRiderToggle: (type: string) => void;
   handleRiderOptionChange: (type: string, optionId: string) => void;
 }
@@ -78,7 +78,7 @@ export default function UniversalRiderToggles({
                 <option value="lou_30">30 Days Cover</option>
               </select>
               <p className="mt-1 text-[10px] text-gray-500">
-                Note: If an insurer doesn't support the selected tier, it will
+                Note: If an insurer doesn&apos;t support the selected tier, it will
                 default to their standard limit.
               </p>
             </div>

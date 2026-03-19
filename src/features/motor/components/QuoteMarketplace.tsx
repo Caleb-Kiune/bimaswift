@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { QuoteBreakdown, InsuranceProduct } from "@/src/features/motor/types";
 import { Show, SignInButton } from "@clerk/nextjs";
 
@@ -17,7 +17,7 @@ interface Props {
   handleCopyQuote: (insurerId: string, quote: QuoteBreakdown) => void;
   handleSaveQuote: (insurerId: string, riderIds: string[]) => void;
   products: InsuranceProduct[] | null;
-  insurerUpgrades: Record<string, Record<string, any>>;
+  insurerUpgrades: Record<string, Record<string, string | boolean>>;
   handleInsurerRiderToggle: (insurerId: string, type: string) => void;
   handleInsurerRiderOptionChange: (
     insurerId: string,
@@ -153,40 +153,11 @@ export default function QuoteMarketplace({
 }: Props) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
 
-  // Stable sorting state to prevent layout jumps when quotes update
-  const [sortedQuotes, setSortedQuotes] = useState<ComparisonQuote[]>([]);
-
-  useEffect(() => {
-    // If no quotes, reset state
-    if (!comparisonQuotes || comparisonQuotes.length === 0) {
-      setSortedQuotes([]);
-      return;
-    }
-
-    setSortedQuotes((prev) => {
-      // Initial sort: When data first arrives, sort by price
-      if (prev.length === 0) {
-        return [...comparisonQuotes].sort(
-          (a, b) => a.quote.totalPayable - b.quote.totalPayable,
-        );
-      }
-
-      // Update existing quotes in their current positions, remove any that are gone
-      const updatedExisting = prev
-        .map((existing) =>
-          comparisonQuotes.find((q) => q.insurerId === existing.insurerId),
-        )
-        .filter((q): q is ComparisonQuote => !!q);
-
-      // If new quotes appeared (not in our original sorted set), append to end
-      const existingIds = new Set(updatedExisting.map((q) => q.insurerId));
-      const additions = comparisonQuotes.filter(
-        (q) => !existingIds.has(q.insurerId),
-      );
-
-      return [...updatedExisting, ...additions];
-    });
-  }, [comparisonQuotes]);
+ 
+// Stable sorting state to prevent layout jumps when quotes update
+  const sortedQuotes = [...(comparisonQuotes || [])].sort(
+    (a, b) => a.quote.totalPayable - b.quote.totalPayable,
+  );
 
   // Empty state handling
   if (sortedQuotes.length === 0) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import calculatePremium from "@/src/features/motor/utils/engine";
 import { InsuranceProduct, QuoteBreakdown } from "@/src/features/motor/types";
 import { formatWhatsAppQuote } from "@/src/features/motor/utils/formatters";
@@ -14,7 +14,7 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   const [coverType, setCoverType] = useState<"COMPREHENSIVE" | "TPO">(
     "COMPREHENSIVE",
   );
-  const [products, setProducts] = useState<InsuranceProduct[] | null>(initialProducts);
+  const [products] = useState<InsuranceProduct[] | null>(initialProducts);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [globalRiders, setGlobalRiders] = useState<Record<string, boolean>>({});
 

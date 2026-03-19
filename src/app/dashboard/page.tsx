@@ -1,4 +1,3 @@
-import { UserButton } from "@clerk/nextjs";
 import { prisma } from "@/src/lib/prisma";
 import { Quote } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
