@@ -77,7 +77,7 @@ export function calculateRiderPremium(
  * Main engine function to compute the complete motor insurance quote breakdown.
  * Evaluates the cover type, aggregates riders, and computes regulatory levies.
  */
-export default function calculateMotorPremium(
+export default function calculatePremium(
   vehicleValue: number,
   coverType: "COMPREHENSIVE" | "TPO",
   product: InsuranceProduct,

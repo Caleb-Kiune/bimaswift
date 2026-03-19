@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import calculateMotorPremium from "@/src/features/motor/utils/engine";
+import calculatePremium from "@/src/features/motor/utils/engine";
 import { InsuranceProduct, QuoteBreakdown } from "@/src/features/motor/types";
 import { formatWhatsAppQuote } from "@/src/features/motor/utils/formatters";
 import { UNDERWRITING_RULES } from "@/src/features/motor/utils/constants";
@@ -62,7 +62,7 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
               return rider.id;
             });
 
-          const quote = calculateMotorPremium(
+          const quote = calculatePremium(
             vehicleValue,
             displayedCoverType,
             product,
