@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import QuoteForm from "@/components/QuoteForm";
+import QuoteForm from "@/src/features/motor/components/QuoteForm";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"motor" | "medical">("motor");

@@ -1,5 +1,5 @@
 import { UserButton } from "@clerk/nextjs";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/src/lib/prisma";
 import { Quote } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 
@@ -18,7 +18,7 @@ export default async function Dashboard() {
         orderBy: {
           createdAt: "desc",
         },
-        take: 10 // Show top 10 recent
+        take: 10, // Show top 10 recent
       });
     }
   } catch (error) {
@@ -29,9 +29,7 @@ export default async function Dashboard() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center p-8">
       <div className="w-full max-w-2xl space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-800">
-            Saved Quotes
-          </h1>
+          <h1 className="text-2xl font-semibold text-gray-800">Saved Quotes</h1>
         </div>
 
         <div className="mt-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">

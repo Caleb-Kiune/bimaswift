@@ -1,4 +1,4 @@
-import { InsuranceProduct } from "@/types";
+import { InsuranceProduct } from "@/src/features/motor/types";
 
 export const activeProducts: InsuranceProduct[] = [
   // --- 1. PIONEER INSURANCE ---

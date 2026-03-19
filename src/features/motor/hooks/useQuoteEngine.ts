@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import calculateMotorPremium from "@/lib/engine";
-import { InsuranceProduct, QuoteBreakdown } from "@/types";
-import { formatWhatsAppQuote } from "@/lib/utils/formatters";
-import { UNDERWRITING_RULES } from "@/lib/constants";
+import calculateMotorPremium from "@/src/features/motor/utils/engine";
+import { InsuranceProduct, QuoteBreakdown } from "@/src/features/motor/types";
+import { formatWhatsAppQuote } from "@/src/features/motor/utils/formatters";
+import { UNDERWRITING_RULES } from "@/src/features/motor/utils/constants";
 import { useRouter } from "next/navigation";
 import { v4 } from "uuid";
 

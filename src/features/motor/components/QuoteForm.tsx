@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuoteEngine } from "@/hooks/useQuoteEngine";
+import { useQuoteEngine } from "@/src/features/motor/hooks/useQuoteEngine";
 import VehicleInputForm from "./VehicleInputForm";
 import QuoteMarketplace from "./QuoteMarketplace";
 

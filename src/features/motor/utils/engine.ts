@@ -5,7 +5,7 @@ import {
   InsuranceProduct,
   QuoteBreakdown,
   CalculatedRider,
-} from "@/types";
+} from "@/src/features/motor/types";
 
 /**
  * Calculates the basic premium based on tiered rating bands.

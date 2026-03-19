@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { QuoteBreakdown, InsuranceProduct } from "@/types";
+import { QuoteBreakdown, InsuranceProduct } from "@/src/features/motor/types";
 import { Show, SignInButton } from "@clerk/nextjs";
 
 interface ComparisonQuote {
