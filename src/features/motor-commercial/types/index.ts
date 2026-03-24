@@ -1,7 +1,7 @@
 /**
  * STRICT DOMAIN TYPES: COMMERCIAL MOTOR INSURANCE
- * By defining these exact shapes, we prevent runtime errors and ensure that 
- * the frontend form, the calculator engine, and the rate configuration 
+ * By defining these exact shapes, we prevent runtime errors and ensure that
+ * the frontend form, the calculator engine, and the rate configuration
  * all agree on the exact data contract.
  */
 
@@ -27,10 +27,10 @@ export interface TpoBand {
   maxTonnage: number;
   flatPremium: number;
   /** * Optional: Some insurers (like Geminia) offer a hardcoded flat rate discount for TPO fleets.
-   * If an insurer does not offer this, we omit the field, and the calculator gracefully 
+   * If an insurer does not offer this, we omit the field, and the calculator gracefully
    * falls back to the standard flatPremium.
    */
-  fleetPremium?: number; 
+  fleetPremium?: number;
 }
 
 /**
@@ -41,26 +41,26 @@ export interface RatingBand {
   usageType: UsageCategory;
   minVehicleValue: number;
   maxVehicleValue: number;
-  
+
   /**
    * Optional Tonnage Fields:
-   * Most insurers only care about value for Comprehensive. However, NCBA has a complex rule 
-   * where General Cartage minimum premiums increase based on tonnage. Making these optional 
+   * Most insurers only care about value for Comprehensive. However, NCBA has a complex rule
+   * where General Cartage minimum premiums increase based on tonnage. Making these optional
    * allows us to handle NCBA's edge case without forcing dummy data onto other insurers.
    */
-  minTonnage?: number; 
-  maxTonnage?: number; 
-  
+  minTonnage?: number;
+  maxTonnage?: number;
+
   /**
-   * Basis Points (BPS) for the percentage rate. 1 BPS = 0.01%. 
+   * Basis Points (BPS) for the percentage rate. 1 BPS = 0.01%.
    * E.g., 450 BPS = 4.5%. We use integers to avoid JavaScript floating-point math bugs.
    */
-  basicRateBps: number; 
+  basicRateBps: number;
   basicMinPremium: number;
-  
+
   /**
    * Optional Fleet Minimum Premium:
-   * Normally, fleets just get a % discount. But NCBA enforces a strict Ksh 100,000 floor 
+   * Normally, fleets just get a % discount. But NCBA enforces a strict Ksh 100,000 floor
    * for General Cartage fleets, overriding the normal 50k/75k minimums.
    */
   fleetMinPremium?: number;
@@ -95,19 +95,19 @@ export interface CommercialInsuranceProduct {
   insurerId: string;
   insurerName: string;
   productName: string;
-  
+
   /** The percentage drop in the base rate for fleets (e.g., 25 = 0.25% off) */
-  fleetDiscountBps: number; 
-  
+  fleetDiscountBps: number;
+
   /** Passenger Legal Liability charge per passenger (Usually Ksh 500 in Kenya) */
-  pllPerPassenger: number; 
-  
-  /** * Explicit Levies: Keeps statutory charges modular just in case an underwriter 
+  pllPerPassenger: number;
+
+  /** * Explicit Levies: Keeps statutory charges modular just in case an underwriter
    * handles stamp duty internally or uses a different fund structure.
    */
-  levies: {                
-    trainingLevy: number;
-    policyholdersFund: number;
+  levies: {
+    trainingLevyBps: number;
+    policyholdersFundBps: number;
     stampDuty: number;
   };
   tpoBands: TpoBand[];
@@ -126,7 +126,7 @@ export interface CommercialInsuranceProduct {
 export interface CommercialVehicleRequest {
   coverType: CoverType;
   /** Optional because TPO quotes do not require a vehicle valuation */
-  sumInsured?: number; 
+  sumInsured?: number;
   tonnage: number;
   usageType: UsageCategory;
   isFleet: boolean;
@@ -150,12 +150,12 @@ export interface CommercialQuoteResult {
   levies: number;
   stampDuty: number;
   totalPremium: number;
-  
+
   /** * UX FLAG: Tells the UI to render a warning badge ("Min Premium Applied").
    * Avoids having to recalculate business logic inside the React component.
    */
-  floorOverrodeDiscount: boolean; 
-  
+  floorOverrodeDiscount: boolean;
+
   /** UX FLAG: Tells the UI to render a success badge ("Fleet Discount Applied") */
-  fleetDiscountApplied: boolean; 
+  fleetDiscountApplied: boolean;
 }
