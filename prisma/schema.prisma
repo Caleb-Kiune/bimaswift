@@ -22,3 +22,17 @@ model Quote {
   createdAt        DateTime @default(now())
   userId           String
 }
+
+model MotorCommercialQuote {
+  id              String   @id @default(uuid())
+  insurerId       String
+  sumInsured      Float?
+  tonnage         Float
+  usageType       String   
+  coverType       String   
+  isFleet         Boolean
+  includePLL      Boolean
+  basicPremium    Float
+  totalPremium    Float
+  createdAt       DateTime @default(now())
+}
