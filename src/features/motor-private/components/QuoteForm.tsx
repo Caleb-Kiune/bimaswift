@@ -1,20 +1,20 @@
 "use client";
 
-import { useQuoteEngine } from "@/src/features/motor/hooks/useQuoteEngine";
+import { useQuoteEngine } from "@/src/features/motor-private/hooks/useQuoteEngine";
 import VehicleInputForm from "./VehicleInputForm";
-import QuoteMarketplace from "./QuoteMarketplace";
+import QuoteMarketplace from "./ComparisonTable";
 import { InsuranceProduct } from "../types";
 
-export default function QuoteForm({ initialProducts }: { initialProducts: InsuranceProduct[] }) {
-
- 
-
+export default function QuoteForm({
+  initialProducts,
+}: {
+  initialProducts: InsuranceProduct[];
+}) {
   const {
     vehicleValue,
     setVehicleValue,
     yom,
     setYom,
-    // coverType,
     setCoverType,
     products,
     isSubmitting,
@@ -50,7 +50,7 @@ export default function QuoteForm({ initialProducts }: { initialProducts: Insura
           {displayedCoverType === "COMPREHENSIVE" && (
             <div className="pt-5 border-t border-zinc-100">
               <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">
-                Optional Add-Ons 
+                Optional Add-Ons
               </h4>
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
                 {/* PVT Toggle */}

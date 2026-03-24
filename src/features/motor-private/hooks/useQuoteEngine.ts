@@ -1,9 +1,16 @@
 import { useState, useRef, useMemo } from "react";
-import calculatePremium from "@/src/features/motor/core/engine";
-import { generateQuoteSignature, computePriceBasedRank, sortQuotesByLockedRank } from "@/src/features/motor/core/sorting";
-import { InsuranceProduct, QuoteBreakdown } from "@/src/features/motor/types";
-import { formatWhatsAppQuote } from "@/src/features/motor/utils/formatters";
-import { UNDERWRITING_RULES } from "@/src/features/motor/utils/constants";
+import calculatePremium from "@/src/features/motor-private/engine/calculator";
+import {
+  generateQuoteSignature,
+  computePriceBasedRank,
+  sortQuotesByLockedRank,
+} from "@/src/features/motor-private/engine/sorting";
+import {
+  InsuranceProduct,
+  QuoteBreakdown,
+} from "@/src/features/motor-private/types";
+import { formatWhatsAppQuote } from "@/src/features/motor-private/utils/formatters";
+import { UNDERWRITING_RULES } from "@/src/features/motor-private/utils/constants";
 import { useRouter } from "next/navigation";
 import { v4 } from "uuid";
 
@@ -23,8 +30,6 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
     Record<string, Record<string, string | boolean>>
   >({});
 
-  
-
   const currentYear = new Date().getFullYear();
   const forceTpo =
     (vehicleValue !== "" &&
@@ -36,7 +41,7 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   // 1. Establish the stateful tracker
   const sortTrackerRef = useRef({ signature: "", lockedRank: [] as string[] });
 
-  // 2. Compute the raw, unsorted quotes based on user input 
+  // 2. Compute the raw, unsorted quotes based on user input
   const rawComparisonQuotes =
     products && vehicleValue !== "" && yom !== ""
       ? products.map((product) => {
@@ -91,10 +96,14 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
 
     if (currentSignature !== sortTrackerRef.current.signature) {
       sortTrackerRef.current.signature = currentSignature;
-      sortTrackerRef.current.lockedRank = computePriceBasedRank(rawComparisonQuotes);
+      sortTrackerRef.current.lockedRank =
+        computePriceBasedRank(rawComparisonQuotes);
     }
 
-    return sortQuotesByLockedRank(rawComparisonQuotes, sortTrackerRef.current.lockedRank);
+    return sortQuotesByLockedRank(
+      rawComparisonQuotes,
+      sortTrackerRef.current.lockedRank,
+    );
   }, [rawComparisonQuotes]);
 
   const handleGlobalRiderToggle = (type: string) => {

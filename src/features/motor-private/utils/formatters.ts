@@ -1,4 +1,4 @@
-import { QuoteBreakdown } from "@/src/features/motor/types";
+import { QuoteBreakdown } from "@/src/features/motor-private/types";
 import { formatKES } from "@/src/lib/formatters";
 
 export function formatWhatsAppQuote(

@@ -1,19 +1,17 @@
 import Link from "next/link";
-import QuoteForm from "@/src/features/motor/components/QuoteForm";
-import { getActiveMotorProducts } from "@/src/features/motor/services/products";
+import QuoteForm from "@/src/features/motor-private/components/QuoteForm";
+import { getActiveMotorProducts } from "@/src/features/motor-private/services/products";
 
 export default async function Home({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-
   const params = await searchParams;
   const activeTab = params.tab || "motor";
 
-  const initialProducts = activeTab === "motor" 
-  ? await getActiveMotorProducts() 
-  : [];
+  const initialProducts =
+    activeTab === "motor" ? await getActiveMotorProducts() : [];
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col items-center p-8">

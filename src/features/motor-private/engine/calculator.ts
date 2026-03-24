@@ -1,11 +1,11 @@
-import { LEVIES } from "@/src/features/motor/utils/constants";
+import { LEVIES } from "@/src/features/motor-private/utils/constants";
 import {
   RatingBand,
   TieredRider,
   InsuranceProduct,
   QuoteBreakdown,
   CalculatedRider,
-} from "@/src/features/motor/types";
+} from "@/src/features/motor-private/types";
 
 /**
  * Calculates the basic premium based on tiered rating bands.
