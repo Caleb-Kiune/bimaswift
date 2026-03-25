@@ -24,6 +24,15 @@ export default function CommercialComparisonTable({
                 Basic Premium:{" "}
                 <span className="font-semibold">{quote.basicPremium}</span>
               </p>
+
+              {quote.riderPremiums > 0 && (
+                <p>
+                  Rider Premiums:{" "}
+                  <span className="font-semibold">{quote.riderPremiums}</span>
+                </p>
+              )}
+
+
               <p>
                 Levies: <span className="font-semibold">{quote.levies}</span>
               </p>

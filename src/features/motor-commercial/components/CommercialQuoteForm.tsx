@@ -23,18 +23,18 @@ export default function CommercialQuoteForm({
     watch,
     formState: { errors },
   } = useForm<CommercialQuoteFormValues>({
-    resolver: zodResolver(commercialQuoteSchema)
+    resolver: zodResolver(commercialQuoteSchema) as any,
     defaultValues: {
       coverType: "TPO",
       tonnage: 0,
       usageType: "OWN_GOODS",
       isFleet: false,
       includePLL: false,
-      // sumInsured is omitted here because our default is TPO!
     },
   });
 
   const coverType = watch("coverType");
+  const includePLL = watch("includePLL");
 
   const onSubmit = (data: CommercialQuoteFormValues) => {
     console.log("ZOD APPROVED DATA:", data);
@@ -66,22 +66,53 @@ export default function CommercialQuoteForm({
           )}
         </div>
 
-        {/* Sum Insured - conditional */}
+        {/* Sum Insured & Riders - conditional */}
         {coverType === "COMPREHENSIVE" && (
-          <div className="flex flex-col">
-            <label className="mb-1 font-medium text-gray-700">
-              Sum Insured
-            </label>
-            <input
-              type="number"
-              {...register("sumInsured")}
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            {errors.sumInsured && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.sumInsured.message}
+          <div className="flex flex-col gap-4 border-t border-gray-200 mt-4 pt-4">
+            <div className="flex flex-col">
+              <label className="mb-1 font-medium text-gray-700">
+                Sum Insured
+              </label>
+              <input
+                type="number"
+                {...register("sumInsured")}
+                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              {(errors as any).sumInsured && (
+                <p className="text-red-500 text-sm mt-1">
+                  {(errors as any).sumInsured.message}
+                </p>
+              )}
+            </div>
+
+            {/* UNIVERSAL RIDERS */}
+            <div className="flex flex-col gap-2">
+              <p className="font-medium text-gray-700 mb-1">
+                Optional Add-ons (Riders)
               </p>
-            )}
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  value="PVT"
+                  {...register("selectedRiders")}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-400"
+                />
+                <label className="text-gray-700 text-sm">
+                  Political Violence & Terrorism (PVT)
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  value="EXCESS_PROTECTOR"
+                  {...register("selectedRiders")}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-400"
+                />
+                <label className="text-gray-700 text-sm">
+                  Excess Protector
+                </label>
+              </div>
+            </div>
           </div>
         )}
 
@@ -137,6 +168,24 @@ export default function CommercialQuoteForm({
             Include Passenger Legal Liability (PLL)?
           </label>
         </div>
+
+        {includePLL && (
+          <div className="flex flex-col">
+            <label className="mb-1 font-medium text-gray-700">
+              Passenger Count
+            </label>
+            <input
+              type="number"
+              {...register("passengerCount")}
+              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {errors.passengerCount && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.passengerCount.message}
+              </p>
+            )}
+          </div>
+        )}
 
         <button
           type="submit"
