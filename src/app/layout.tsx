@@ -16,17 +16,8 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className="min-h-screen bg-gray-100 text-sm">
-          <div
-            className="
-            max-w-100
-            mx-auto
-            bg-white
-            shadow-lg
-            min-h-screen
-            tabular-nums      
-          "
-          >
+        <body>
+          <div>
             <Navbar />
             {children}
           </div>
