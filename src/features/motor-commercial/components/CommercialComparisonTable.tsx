@@ -1,10 +1,7 @@
 "use client";
 
 import { CommercialQuoteResult } from "../types";
-import dynamic from "next/dynamic";
-const DownloadQuoteButton = dynamic(() => import("./DownloadQuoteButton"), {
-  ssr: false,
-});
+import DownloadQuoteWrapper from "./DownloadQuoteWrapper";
 
 interface CommercialComparisonTableProps {
   quoteResults: CommercialQuoteResult[] | null;
@@ -59,7 +56,7 @@ export default function CommercialComparisonTable({
 
               {/* 2. The PDF Download Trigger */}
               <div className="mt-4 text-center">
-                <DownloadQuoteButton quote={quote} />
+                <DownloadQuoteWrapper quote={quote} />
               </div>
             </div>
           ))}

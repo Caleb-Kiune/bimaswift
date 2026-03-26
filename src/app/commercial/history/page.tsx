@@ -1,12 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "../../../lib/prisma";
 import Link from "next/link";
-import dynamic from "next/dynamic";
-const DownloadQuoteButton = dynamic(
-  () =>
-    import("../../../features/motor-commercial/components/DownloadQuoteButton"),
-  { ssr: false }, // This tells Next.js to NEVER run this on the server!
-);
+import DownloadQuoteWrapper from "@/src/features/motor-commercial/components/DownloadQuoteWrapper";
 
 export default async function CommercialHistoryPage() {
   const { userId } = await auth();
@@ -95,7 +90,7 @@ export default async function CommercialHistoryPage() {
                       </td>
                       {/* THE NEW BUTTON */}
                       <td className="p-4 text-right">
-                        <DownloadQuoteButton quote={mappedQuoteForPDF} />
+                        <DownloadQuoteWrapper quote={mappedQuoteForPDF} />
                       </td>
                     </tr>
                   );
