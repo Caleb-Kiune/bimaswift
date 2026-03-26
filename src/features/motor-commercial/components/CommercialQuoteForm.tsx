@@ -6,8 +6,6 @@ import {
   commercialQuoteSchema,
   CommercialQuoteFormValues,
 } from "../validations/commercialValidation";
-import calculatePremium from "../engine/calculator";
-import { activeCommercialProducts } from "../data/rates";
 import { CommercialQuoteResult } from "../types";
 
 interface CommercialQuoteFormProps {
@@ -36,11 +34,30 @@ export default function CommercialQuoteForm({
   const coverType = watch("coverType");
   const includePLL = watch("includePLL");
 
-  const onSubmit = (data: CommercialQuoteFormValues) => {
-    console.log("ZOD APPROVED DATA:", data);
-    const generatedQuotes = calculatePremium(activeCommercialProducts, data);
-    setQuoteResults(generatedQuotes);
-    console.log("PREMIUM RESULT:", generatedQuotes);
+  const onSubmit = async (data: CommercialQuoteFormValues) => {
+    try {
+      console.log("SENDING DATA TO API:", data);
+
+      const response = await fetch("/api/quotes/commercial", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch quotes");
+      }
+
+      const result = await response.json();
+
+      setQuoteResults(result.quotes);
+
+      console.log("PREMIUM RESULT FROM API:", result.quotes);
+    } catch (error) {
+      console.error("Submission error:", error);
+    }
   };
 
   return (
