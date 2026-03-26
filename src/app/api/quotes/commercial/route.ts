@@ -39,7 +39,7 @@ export async function POST(req: Request) {
         coverType: validData.coverType,
         usageType: validData.usageType,
         tonnage: validData.tonnage,
-        sumInsured: validData.sumInsured ?? null, // Fallback for TPO
+        sumInsured: validData.coverType === "COMPREHENSIVE" ? validData.sumInsured : null, 
         isFleet: validData.isFleet,
         includePLL: validData.includePLL,
         passengerCount: validData.passengerCount ?? null,

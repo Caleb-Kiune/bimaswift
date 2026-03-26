@@ -21,7 +21,7 @@ export default function CommercialQuoteForm({
     watch,
     formState: { errors },
   } = useForm<CommercialQuoteFormValues>({
-    resolver: zodResolver(commercialQuoteSchema) as any,
+    resolver: zodResolver(commercialQuoteSchema),
     defaultValues: {
       coverType: "TPO",
       tonnage: 0,
@@ -92,12 +92,14 @@ export default function CommercialQuoteForm({
               </label>
               <input
                 type="number"
-                {...register("sumInsured")}
+                {...register("sumInsured", {
+                  setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                })}
                 className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
-              {(errors as any).sumInsured && (
+              {errors.sumInsured && (
                 <p className="text-red-500 text-sm mt-1">
-                  {(errors as any).sumInsured.message}
+                  {errors.sumInsured.message}
                 </p>
               )}
             </div>
@@ -138,7 +140,9 @@ export default function CommercialQuoteForm({
           <label className="mb-1 font-medium text-gray-700">Tonnage</label>
           <input
             type="number"
-            {...register("tonnage")}
+            {...register("tonnage", {
+              setValueAs: (v) => (v === "" ? undefined : Number(v)),
+            })}
             className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           {errors.tonnage && (
@@ -193,7 +197,9 @@ export default function CommercialQuoteForm({
             </label>
             <input
               type="number"
-              {...register("passengerCount")}
+              {...register("passengerCount", {
+                setValueAs: (v) => (v === "" ? undefined : Number(v)),
+              })}
               className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
             {errors.passengerCount && (

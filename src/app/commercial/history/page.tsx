@@ -1,7 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "../../../lib/prisma";
 import Link from "next/link";
-import DownloadQuoteButton from "../../../features/motor-commercial/components/DownloadQuoteButton";
+import dynamic from "next/dynamic";
+const DownloadQuoteButton = dynamic(
+  () =>
+    import("../../../features/motor-commercial/components/DownloadQuoteButton"),
+  { ssr: false }, // This tells Next.js to NEVER run this on the server!
+);
 
 export default async function CommercialHistoryPage() {
   const { userId } = await auth();
@@ -12,16 +17,18 @@ export default async function CommercialHistoryPage() {
 
   const quotes = await prisma.motorCommercialQuote.findMany({
     where: { userId: userId },
-    orderBy: { createdAt: "desc" }, 
+    orderBy: { createdAt: "desc" },
   });
 
   return (
     <div className="min-h-screen p-6 bg-gray-50">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Commercial Quote History</h1>
-          <Link 
-            href="/commercial" 
+          <h1 className="text-2xl font-bold text-gray-800">
+            Commercial Quote History
+          </h1>
+          <Link
+            href="/commercial"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
           >
             + New Quote
@@ -30,7 +37,9 @@ export default async function CommercialHistoryPage() {
 
         {quotes.length === 0 ? (
           <div className="bg-white p-8 text-center rounded-lg shadow-sm border border-gray-200">
-            <p className="text-gray-500">You haven't generated any commercial quotes yet.</p>
+            <p className="text-gray-500">
+              You haven&apos;t generated any commercial quotes yet.
+            </p>
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -58,12 +67,15 @@ export default async function CommercialHistoryPage() {
                     levies: quote.levies,
                     stampDuty: quote.stampDuty,
                     totalPremium: quote.totalPremium,
-                    floorOverrodeDiscount: false, 
+                    floorOverrodeDiscount: false,
                     fleetDiscountApplied: quote.isFleet,
                   };
 
                   return (
-                    <tr key={quote.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                    <tr
+                      key={quote.id}
+                      className="border-b border-gray-100 hover:bg-gray-50 transition"
+                    >
                       <td className="p-4 text-sm text-gray-600">
                         {new Date(quote.createdAt).toLocaleDateString()}
                       </td>
@@ -74,7 +86,9 @@ export default async function CommercialHistoryPage() {
                         {quote.coverType}
                       </td>
                       <td className="p-4 text-sm text-gray-600">
-                        {quote.sumInsured ? `KES ${quote.sumInsured.toLocaleString()}` : `${quote.tonnage} Tons`}
+                        {quote.sumInsured
+                          ? `KES ${quote.sumInsured.toLocaleString()}`
+                          : `${quote.tonnage} Tons`}
                       </td>
                       <td className="p-4 font-bold text-blue-600">
                         KES {quote.totalPremium.toLocaleString()}

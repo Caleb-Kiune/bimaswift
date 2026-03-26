@@ -1,17 +1,7 @@
 export default function CommercialLayout({
-    children,
-    recent,
-    modal,
+  children,
 }: {
-    children: React.ReactNode;
-    recent: React.ReactNode;
-    modal: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    return (
-        <div className="flex flex-col gap-4">
-            {children}
-            {recent}
-            {modal}
-        </div>
-    );
+  return <div className="flex flex-col gap-4">{children}</div>;
 }

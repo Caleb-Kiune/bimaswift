@@ -71,7 +71,7 @@ export default function calculatePremium(
           request.coverType === "TPO"
             ? calculateTpoBasePremium(product, request)
             : calculateComprehensiveBasePremium(product, request);
-      } catch (error) {
+      } catch {
         return null;
       }
 
