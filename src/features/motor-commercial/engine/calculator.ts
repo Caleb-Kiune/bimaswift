@@ -3,101 +3,70 @@ import {
   CommercialVehicleRequest,
   CommercialQuoteResult,
 } from "../types/index";
-import { activeCommercialProducts } from "../data/rates";
 import {
   calculateTpoBasePremium,
   calculateComprehensiveBasePremium,
   leviesCalculator,
+  calculateRiders,
 } from "../utils/calculatorUtils";
+
+import { activeCommercialProducts } from "../data/rates";
 
 export default function calculatePremium(
   products: CommercialInsuranceProduct[],
   request: CommercialVehicleRequest,
 ): CommercialQuoteResult[] {
-  // STEP 1: Loop through every insurer in the database
-  return (
-    products
-      .map((product) => {
-        // Step 2: Route to the correct helper function
-        const basePremium =
-          request.coverType === "TPO"
-            ? calculateTpoBasePremium(product, request)
-            : calculateComprehensiveBasePremium(product, request);
+  return products
 
-        // If the helper returned null (decline), stop here and return null for this quote
-        if (basePremium === null) return null;
+    .map((product) => {
+      // STEP 1: Route to the correct base premium helper
+      const baseResult =
+        request.coverType === "TPO"
+          ? calculateTpoBasePremium(product, request)
+          : calculateComprehensiveBasePremium(product, request);
 
-        // STEP 3: Add Passenger Legal Liability (PLL)
-        let pllCharge = 0;
-        if (request.includePLL) {
-          pllCharge = (request.passengerCount || 0) * product.pllPerPassenger;
-        }
+      if (baseResult === null) return null;
 
-        // STEP 4: Add Optional Riders (PVT, Excess Protector)
-        let totalRiderPremium = 0;
+      const basePremium = baseResult.premium;
 
-        if (
-          request.coverType === "COMPREHENSIVE" &&
-          request.sumInsured &&
-          request.selectedRiders &&
-          request.selectedRiders.length > 0
-        ) {
-          request.selectedRiders.forEach((riderId) => {
-            // Find the rider config for this specific insurer
-            const productRider = product.riders?.find(
-              (r) => r.type === riderId,
-            );
+      // STEP 2: Add Passenger Legal Liability (PLL)
+      let pllCharge = 0;
+      if (request.includePLL) {
+        pllCharge = (request.passengerCount || 0) * product.pllPerPassenger;
+      }
 
-            if (productRider) {
-              // Hardcoded to only ever look at the first band of the rider
-              const band = productRider.bands[0];
+      // STEP 3: Add Optional Riders
+      const riderResult = calculateRiders(product, request);
+      const totalRiderPremium = riderResult.totalRiderPremium;
 
-              if (band.rateType === "PERCENTAGE_BPS") {
-                // Calculate rider premium based on total vehicle value
-                const calculatedRider = Math.floor(
-                  (request.sumInsured! * band.rateValue) / 10000,
-                );
+      const combinedPremium = basePremium + pllCharge + totalRiderPremium;
 
-                // Enforce the rider's minimum premium rule (e.g. Min 5000)
-                const finalRiderPremium = Math.max(
-                  calculatedRider,
-                  band.minPremium,
-                );
-                totalRiderPremium += finalRiderPremium;
-              }
-            }
-          });
-        }
+      // STEP 4: Calculate Levies & Taxes
+      // Now returns a rich breakdown object
+      const levyDetails = leviesCalculator(combinedPremium, product);
 
-        // Add everything up before statutory taxes
-        const combinedPremium = basePremium + pllCharge + totalRiderPremium;
+      // STEP 5: Assemble the Final Quote
+      const quote: CommercialQuoteResult = {
+        insurerId: product.insurerId,
+        insurerName: product.insurerName,
+        sumInsured: request.sumInsured,
 
-        // STEP 5: Calculate Levies & Taxes
+        basicPremium: basePremium,
+        pllCharge: pllCharge,
+        riderPremiums: totalRiderPremium,
+        totalLevies: levyDetails.totalLevies,
+        stampDuty: product.levies.stampDuty,
+        totalPremium: combinedPremium + levyDetails.totalLevies,
 
-        const levies = leviesCalculator(combinedPremium, product);
-        const totalLevies =
-          levies.trainingLevy + levies.policyholdersFund + levies.stampDuty;
+        basePremiumDetails: baseResult.breakdown,
+        riderDetails: riderResult.riderDetails,
+        levyDetails: levyDetails,
 
-        // STEP 6: Assemble the Final Quote
-        const quote: CommercialQuoteResult = {
-          insurerId: product.insurerId,
-          insurerName: product.insurerName,
-          basicPremium: basePremium,
-          pllCharge: pllCharge,
-          riderPremiums: totalRiderPremium,
-          levies: totalLevies,
-          stampDuty: product.levies.stampDuty,
-          totalPremium: combinedPremium + totalLevies,
-          floorOverrodeDiscount: false, // Currently hardcoded
-          fleetDiscountApplied: false, // Currently hardcoded
-        };
+        floorOverrodeDiscount: baseResult.floorOverrodeDiscount,
+        fleetDiscountApplied: baseResult.fleetDiscountApplied,
+      };
 
-        return quote;
-      })
-
-      // STEP 7: Filter out the failed quotes
-      // Removes all the "null" values returned by the try/catch block
-      .filter((quote) => quote !== null) as CommercialQuoteResult[]
-  );
+      return quote;
+    })
+    .filter((quote) => quote !== null) as CommercialQuoteResult[];
 }
-

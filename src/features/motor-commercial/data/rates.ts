@@ -277,9 +277,9 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
     insurerId: "ins_cic",
     insurerName: "CIC Group",
     productName: "Motor Commercial Hybrid",
-    
+
     pllPerPassenger: 500,
-    
+
     levies: {
       trainingLevyBps: 20,
       policyholdersFundBps: 25,
@@ -371,12 +371,12 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
         usageType: "GENERAL_CARTAGE",
         minVehicleValue: 0,
         maxVehicleValue: 999999999,
-        basicRateBps: 500, 
+        basicRateBps: 500,
         basicMinPremium: 50000,
       },
     ],
 
-    riders: [], 
+    riders: [],
   },
 
   // ==========================================
@@ -388,22 +388,22 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
     insurerName: "Pioneer General",
     productName: "Motor Commercial Hybrid",
 
-    pllPerPassenger: 500, 
-    
+    pllPerPassenger: 500,
+
     levies: {
       trainingLevyBps: 20,
       policyholdersFundBps: 25,
       stampDuty: 40,
     },
 
-    tpoBands: [], 
+    tpoBands: [],
 
     ratingBands: [
       {
         usageType: "OWN_GOODS",
         minVehicleValue: 0,
         maxVehicleValue: 999999999,
-        basicRateBps: 500, 
+        basicRateBps: 500,
         fleetRateBps: 475,
         basicMinPremium: 50000,
         fleetMinPremium: 50000,
@@ -412,14 +412,54 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
         usageType: "GENERAL_CARTAGE",
         minVehicleValue: 0,
         maxVehicleValue: 999999999,
-        basicRateBps: 500, 
+        basicRateBps: 500,
         fleetRateBps: 475,
         basicMinPremium: 50000,
         fleetMinPremium: 50000,
       },
     ],
 
-    riders: [],
+    riders: [
+      {
+        id: "pioneer_comm_ep",
+        type: "EXCESS_PROTECTOR",
+        name: "Excess Protector",
+        isToggleable: true,
+        bands: [
+          {
+            minVehicleValue: 0,
+            maxVehicleValue: 999999999,
+            rateType: "PERCENTAGE_BPS",
+            rateValue: 50, 
+            minPremium: 5000,
+          },
+        ],
+      },
+      {
+        id: "pioneer_comm_pvt",
+        type: "PVT",
+        name: "Political Violence & Terrorism",
+        isToggleable: true,
+        bands: [
+          {
+            // Band 1: Free up to 4 Million
+            minVehicleValue: 0,
+            maxVehicleValue: 4000000,
+            rateType: "FREE",
+            rateValue: 0,
+            minPremium: 0,
+          },
+          {
+            // Band 2: 0.25% for values above 4 Million
+            minVehicleValue: 4000001,
+            maxVehicleValue: 999999999,
+            rateType: "PERCENTAGE_BPS",
+            rateValue: 25, 
+            minPremium: 2500,
+          },
+        ],
+      },
+    ],
   },
 
   // ==========================================
@@ -432,7 +472,7 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
     productName: "Commercial Motor",
 
     pllPerPassenger: 500,
-    
+
     levies: {
       trainingLevyBps: 20,
       policyholdersFundBps: 25,

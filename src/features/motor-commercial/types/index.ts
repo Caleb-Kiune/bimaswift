@@ -142,18 +142,50 @@ export interface CommercialVehicleRequest {
 export interface CommercialQuoteResult {
   insurerId: string;
   insurerName: string;
+  sumInsured: number | undefined;
+
   basicPremium: number;
   pllCharge: number;
   riderPremiums: number;
-  levies: number;
+  totalLevies: number;
   stampDuty: number;
   totalPremium: number;
 
-  /** * UX FLAG: Tells the UI to render a warning badge ("Min Premium Applied").
-   * Avoids having to recalculate business logic inside the React component.
-   */
-  floorOverrodeDiscount: boolean;
+  basePremiumDetails: CalculationBreakdown;
+  riderDetails: RiderBreakdown[];
+  levyDetails: LevyBreakdown;
 
-  /** UX FLAG: Tells the UI to render a success badge ("Fleet Discount Applied") */
+  floorOverrodeDiscount: boolean;
   fleetDiscountApplied: boolean;
+}
+
+// ----------------------------------------------------------------------
+// 4. INTERNAL ENGINE & UI BREAKDOWN INTERFACES
+// ----------------------------------------------------------------------
+
+/** * Universal breakdown of how a specific number was calculated
+ */
+export interface CalculationBreakdown {
+  rateType: "PERCENTAGE_BPS" | "FLAT" | "FREE";
+  rateValue: number;
+  minimumApplied: boolean;
+}
+
+export interface BasePremiumResult {
+  premium: number;
+  fleetDiscountApplied: boolean;
+  floorOverrodeDiscount: boolean;
+  breakdown: CalculationBreakdown;
+}
+
+export interface RiderBreakdown extends CalculationBreakdown {
+  riderId: string;
+  name: string;
+  premium: number;
+}
+
+export interface LevyBreakdown {
+  trainingLevy: { amount: number; rateValueBps: number };
+  policyholdersFund: { amount: number; rateValueBps: number };
+  stampDuty: { amount: number };
 }

@@ -1,11 +1,15 @@
-import { CommercialInsuranceProduct, CommercialVehicleRequest } from "../types";
+import {
+  CommercialInsuranceProduct,
+  CommercialVehicleRequest,
+  BasePremiumResult,
+  RiderBreakdown,
+} from "../types/index.js";
 
-//TPO
-
+// --- TPO CALCULATOR ---
 export function calculateTpoBasePremium(
   product: CommercialInsuranceProduct,
   request: CommercialVehicleRequest,
-): number | null {
+): BasePremiumResult | null {
   const band = product.tpoBands.find(
     (band) =>
       band.usageType === request.usageType &&
@@ -13,24 +17,33 @@ export function calculateTpoBasePremium(
       request.tonnage <= band.maxTonnage,
   );
 
-  // If the vehicle doesn't fit the insurer's rules, gracefully decline
   if (!band) return null;
 
-  // Check if it's a fleet and if the insurer offers a specific TPO fleet rate
+  let premium = band.flatPremium;
+  let fleetDiscountApplied = false;
+
   if (request.isFleet && band.fleetPremium !== undefined) {
-    return band.fleetPremium;
+    premium = band.fleetPremium;
+    fleetDiscountApplied = premium < band.flatPremium;
   }
 
-  // Otherwise, return the standard flat premium
-  return band.flatPremium;
+  return {
+    premium: premium,
+    fleetDiscountApplied: fleetDiscountApplied,
+    floorOverrodeDiscount: false,
+    breakdown: {
+      rateType: "FLAT",
+      rateValue: premium,
+      minimumApplied: false,
+    },
+  };
 }
 
-// COMP
-
+// --- COMPREHENSIVE CALCULATOR ---
 export function calculateComprehensiveBasePremium(
   product: CommercialInsuranceProduct,
   request: CommercialVehicleRequest,
-): number | null {
+): BasePremiumResult | null {
   const band = product.ratingBands.find(
     (band) =>
       band.usageType === request.usageType &&
@@ -40,29 +53,36 @@ export function calculateComprehensiveBasePremium(
       request.sumInsured! <= band.maxVehicleValue,
   );
 
-  if (!band) return null; // Gracefully decline
+  if (!band) return null;
 
-  // 1. Determine which rate and floor to use based on the fleet flag
-  // The ?? operator safely falls back to the basic rate/minimum if the underwriter doesn't offer a fleet specific one.
-  const rateToUse = request.isFleet 
-    ? (band.fleetRateBps ?? band.basicRateBps) 
+  const rateToUse = request.isFleet
+    ? (band.fleetRateBps ?? band.basicRateBps)
     : band.basicRateBps;
 
-  const floorToUse = request.isFleet 
-    ? (band.fleetMinPremium ?? band.basicMinPremium) 
+  const floorToUse = request.isFleet
+    ? (band.fleetMinPremium ?? band.basicMinPremium)
     : band.basicMinPremium;
 
-  // 2. Do the math once using Basis Points
   const calculatedPremium = Math.floor(
-    (request.sumInsured! * rateToUse) / 10000
+    (request.sumInsured! * rateToUse) / 10000,
   );
 
-  // 3. Enforce the floor
-  return Math.max(calculatedPremium, floorToUse);
+  const finalPremium = Math.max(calculatedPremium, floorToUse);
+  const floorIntervened = calculatedPremium < floorToUse;
+
+  return {
+    premium: finalPremium,
+    fleetDiscountApplied: request.isFleet && rateToUse < band.basicRateBps,
+    floorOverrodeDiscount: floorIntervened,
+    breakdown: {
+      rateType: "PERCENTAGE_BPS",
+      rateValue: rateToUse,
+      minimumApplied: floorIntervened,
+    },
+  };
 }
 
-//LEVIES
-
+// --- LEVIES CALCULATOR ---
 export function leviesCalculator(
   combinedPremium: number,
   product: CommercialInsuranceProduct,
@@ -75,5 +95,76 @@ export function leviesCalculator(
   );
   const stampDuty = product.levies.stampDuty;
 
-  return { trainingLevy, policyholdersFund, stampDuty };
+  return {
+    trainingLevy: {
+      amount: trainingLevy,
+      rateValueBps: product.levies.trainingLevyBps,
+    },
+    policyholdersFund: {
+      amount: policyholdersFund,
+      rateValueBps: product.levies.policyholdersFundBps,
+    },
+    stampDuty: { amount: stampDuty },
+    totalLevies: trainingLevy + policyholdersFund + stampDuty,
+  };
+}
+
+// --- RIDERS CALCULATOR ---
+export function calculateRiders(
+  product: CommercialInsuranceProduct,
+  request: CommercialVehicleRequest,
+) {
+  let totalRiderPremium = 0;
+  const riderDetails: RiderBreakdown[] = [];
+
+  if (
+    request.coverType !== "COMPREHENSIVE" ||
+    !request.sumInsured ||
+    !request.selectedRiders ||
+    request.selectedRiders.length === 0
+  ) {
+    return { totalRiderPremium, riderDetails };
+  }
+
+  request.selectedRiders.forEach((riderId) => {
+    const productRider = product.riders?.find((r) => r.type === riderId);
+
+    if (productRider) {
+      const band = productRider.bands.find(
+        (b) =>
+          request.sumInsured! >= b.minVehicleValue &&
+          request.sumInsured! <= b.maxVehicleValue,
+      );
+
+      if (band) {
+        let finalRiderPremium = 0;
+        let minimumApplied = false;
+
+        if (band.rateType === "PERCENTAGE_BPS") {
+          const calculatedRider = Math.floor(
+            (request.sumInsured! * band.rateValue) / 10000,
+          );
+          finalRiderPremium = Math.max(calculatedRider, band.minPremium);
+          minimumApplied = calculatedRider < band.minPremium;
+        } else if (band.rateType === "FLAT") {
+          finalRiderPremium = band.rateValue;
+        } else if (band.rateType === "FREE") {
+          finalRiderPremium = 0;
+        }
+
+        totalRiderPremium += finalRiderPremium;
+
+        riderDetails.push({
+          riderId: productRider.type,
+          name: productRider.name,
+          premium: finalRiderPremium,
+          rateType: band.rateType,
+          rateValue: band.rateValue,
+          minimumApplied: minimumApplied,
+        });
+      }
+    }
+  });
+
+  return { totalRiderPremium, riderDetails };
 }
