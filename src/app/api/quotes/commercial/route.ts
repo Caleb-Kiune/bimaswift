@@ -39,17 +39,28 @@ export async function POST(req: Request) {
         coverType: validData.coverType,
         usageType: validData.usageType,
         tonnage: validData.tonnage,
-        sumInsured: validData.coverType === "COMPREHENSIVE" ? validData.sumInsured : null, 
+        sumInsured: quote.sumInsured ?? null, 
         isFleet: validData.isFleet,
         includePLL: validData.includePLL,
         passengerCount: validData.passengerCount ?? null,
         selectedRiders: validData.selectedRiders ?? [],
+
+        // Premium Totals
         basicPremium: quote.basicPremium,
         pllCharge: quote.pllCharge,
         riderPremiums: quote.riderPremiums,
-        levies: quote.levies,
+        levies: quote.totalLevies,
         stampDuty: quote.stampDuty,
         totalPremium: quote.totalPremium,
+
+        // Transparency Details (The "Math Story")
+        basePremiumDetails: quote.basePremiumDetails as any,
+        riderDetails: quote.riderDetails as any,
+        levyDetails: quote.levyDetails as any,
+        
+        // UX Flags
+        floorOverrodeDiscount: quote.floorOverrodeDiscount,
+        fleetDiscountApplied: quote.fleetDiscountApplied,
       }));
 
       // Bulk Insert: createMany is highly optimized for saving arrays of data!

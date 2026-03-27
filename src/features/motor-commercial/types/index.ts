@@ -169,6 +169,7 @@ export interface CalculationBreakdown {
   rateType: "PERCENTAGE_BPS" | "FLAT" | "FREE";
   rateValue: number;
   minimumApplied: boolean;
+  [key: string]: unknown;
 }
 
 export interface BasePremiumResult {
@@ -188,4 +189,5 @@ export interface LevyBreakdown {
   trainingLevy: { amount: number; rateValueBps: number };
   policyholdersFund: { amount: number; rateValueBps: number };
   stampDuty: { amount: number };
+  [key: string]: unknown;
 }

@@ -10,8 +10,6 @@ import {
   calculateRiders,
 } from "../utils/calculatorUtils";
 
-import { activeCommercialProducts } from "../data/rates";
-
 export default function calculatePremium(
   products: CommercialInsuranceProduct[],
   request: CommercialVehicleRequest,
@@ -42,7 +40,6 @@ export default function calculatePremium(
       const combinedPremium = basePremium + pllCharge + totalRiderPremium;
 
       // STEP 4: Calculate Levies & Taxes
-      // Now returns a rich breakdown object
       const levyDetails = leviesCalculator(combinedPremium, product);
 
       // STEP 5: Assemble the Final Quote

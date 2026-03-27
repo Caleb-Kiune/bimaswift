@@ -25,13 +25,11 @@ model Quote {
 
 model MotorCommercialQuote {
   id               String   @id @default(uuid())
-  userId           String   // Links the quote to the Clerk user who generated it
-  
-  // The Insurer
+  userId           String
   insurerId        String
-  insurerName      String   
+  insurerName      String 
 
-  // The Request (Risk Details)
+  // Request Context
   coverType        String   
   usageType        String   
   tonnage          Float
@@ -41,14 +39,22 @@ model MotorCommercialQuote {
   passengerCount   Int?
   selectedRiders   String[] 
 
-  // The Result (Premium Breakdown)
+  // Premium Totals
   basicPremium     Float
   pllCharge        Float
   riderPremiums    Float
-  levies           Float
+  levies           Float    
   stampDuty        Float
   totalPremium     Float
 
-  // Metadata
+  // Transparency Details (The "Math Story")
+  basePremiumDetails Json?   
+  riderDetails       Json?   
+  levyDetails        Json?   
+  
+  // UX Flags
+  floorOverrodeDiscount Boolean @default(false)
+  fleetDiscountApplied  Boolean @default(false)
+
   createdAt        DateTime @default(now())
 }

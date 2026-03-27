@@ -95,7 +95,10 @@ interface QuoteDocumentProps {
   quote: CommercialQuoteResult;
 }
 
+
 export default function QuoteDocument({ quote }: QuoteDocumentProps) {
+  const formatRate = (bps: number) => `${(bps / 100).toFixed(2)}%`;
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -104,43 +107,68 @@ export default function QuoteDocument({ quote }: QuoteDocumentProps) {
         <View style={styles.header}>
           <Text style={styles.title}>BimaSwift</Text>
           <Text style={styles.subtitle}>Official Commercial Motor Quote</Text>
-          <Text style={styles.subtitle}>Date: {new Date().toLocaleDateString()}</Text>
+          <Text style={styles.subtitle}>Reference Date: {new Date().toLocaleDateString()}</Text>
         </View>
 
-        {/* INSURER DETAILS */}
+        {/* RISK SUMMARY */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Underwriter Details</Text>
+          <Text style={styles.sectionTitle}>Risk Summary</Text>
           <View style={styles.row}>
-            <Text style={styles.label}>Insurance Company:</Text>
+            <Text style={styles.label}>Insurer:</Text>
             <Text style={styles.value}>{quote.insurerName}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Vehicle Sum Insured:</Text>
+            <Text style={styles.value}>KES {quote.sumInsured?.toLocaleString() ?? "N/A"}</Text>
           </View>
         </View>
 
-        {/* PREMIUM BREAKDOWN */}
+        {/* CALCULATION DETAILS */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Premium Breakdown</Text>
+          <Text style={styles.sectionTitle}>Premium Calculation Breakdown</Text>
+          
+          {/* Base Premium Section */}
           <View style={styles.row}>
-            <Text style={styles.label}>Basic Premium:</Text>
+            <View>
+              <Text style={styles.label}>Basic Premium</Text>
+              <Text style={{ fontSize: 9, color: "#6b7280" }}>
+                Applied Rate: {formatRate(quote.basePremiumDetails.rateValue)} 
+                {quote.basePremiumDetails.minimumApplied && " (Minimum Premium Enforced)"}
+              </Text>
+            </View>
             <Text style={styles.value}>KES {quote.basicPremium.toLocaleString()}</Text>
           </View>
           
-          {quote.pllCharge > 0 && (
-            <View style={styles.row}>
-              <Text style={styles.label}>Passenger Legal Liability (PLL):</Text>
-              <Text style={styles.value}>KES {quote.pllCharge.toLocaleString()}</Text>
+          {/* Riders Section */}
+          {quote.riderDetails.map((rider) => (
+            <View key={rider.riderId} style={styles.row}>
+              <View>
+                <Text style={styles.label}>{rider.name}</Text>
+                <Text style={{ fontSize: 9, color: "#6b7280" }}>
+                  {rider.rateType === "FREE" ? "Complimentary Benefit" : `Applied Rate: ${formatRate(rider.rateValue)}`}
+                </Text>
+              </View>
+              <Text style={styles.value}>
+                {rider.premium > 0 ? `KES ${rider.premium.toLocaleString()}` : "FREE"}
+              </Text>
             </View>
-          )}
+          ))}
 
-          {quote.riderPremiums > 0 && (
+          {/* Levies Breakdown Section */}
+          <View style={{ marginTop: 10, padding: 8, backgroundColor: "#f9fafb" }}>
+            <Text style={{ fontSize: 10, fontWeight: "bold", marginBottom: 5 }}>Statutory Levies Breakdown</Text>
             <View style={styles.row}>
-              <Text style={styles.label}>Optional Riders (e.g. PVT, Excess):</Text>
-              <Text style={styles.value}>KES {quote.riderPremiums.toLocaleString()}</Text>
+              <Text style={styles.label}>Training Levy ({formatRate(quote.levyDetails.trainingLevy.rateValueBps)})</Text>
+              <Text style={styles.label}>{quote.levyDetails.trainingLevy.amount.toLocaleString()}</Text>
             </View>
-          )}
-
-          <View style={styles.row}>
-            <Text style={styles.label}>Statutory Levies & Stamp Duty:</Text>
-            <Text style={styles.value}>KES {quote.levies.toLocaleString()}</Text>
+            <View style={styles.row}>
+              <Text style={styles.label}>Policyholders Fund ({formatRate(quote.levyDetails.policyholdersFund.rateValueBps)})</Text>
+              <Text style={styles.label}>{quote.levyDetails.policyholdersFund.amount.toLocaleString()}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Stamp Duty (Flat)</Text>
+              <Text style={styles.label}>{quote.levyDetails.stampDuty.amount.toLocaleString()}</Text>
+            </View>
           </View>
 
           {/* TOTAL */}
@@ -150,11 +178,9 @@ export default function QuoteDocument({ quote }: QuoteDocumentProps) {
           </View>
         </View>
 
-        {/* FOOTER */}
         <Text style={styles.footer}>
-          Generated securely by BimaSwift Engine • This quote is valid for 30 days and is subject to underwriter approval.
+          This is an automated quote generated via BimaSwift. All rates are based on the latest underwriter guidelines[cite: 1, 4, 21]. Underwriter Minimum Premiums were applied where necessary to ensure compliance[cite: 2, 4, 12].
         </Text>
-        
       </Page>
     </Document>
   );
