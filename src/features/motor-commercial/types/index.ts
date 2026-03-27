@@ -63,6 +63,7 @@ export interface RatingBand {
    * Normally, fleets just get a % discount. But NCBA enforces a strict Ksh 100,000 floor
    * for General Cartage fleets, overriding the normal 50k/75k minimums.
    */
+  fleetRateBps?: number;
   fleetMinPremium?: number;
 }
 
@@ -95,9 +96,6 @@ export interface CommercialInsuranceProduct {
   insurerId: string;
   insurerName: string;
   productName: string;
-
-  /** The percentage drop in the base rate for fleets (e.g., 25 = 0.25% off) */
-  fleetDiscountBps: number;
 
   /** Passenger Legal Liability charge per passenger (Usually Ksh 500 in Kenya) */
   pllPerPassenger: number;

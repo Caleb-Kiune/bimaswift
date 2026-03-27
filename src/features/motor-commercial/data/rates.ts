@@ -23,7 +23,6 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
     // We use integers (25) instead of floats (0.0025) for rates.
     // 1 Basis Point = 0.01%. So 25 BPS = 0.25%.
     // This is a standard financial engineering practice to prevent JavaScript floating-point math errors.
-    fleetDiscountBps: 25,
 
     // Passenger Legal Liability is explicitly defined per insurer.
     pllPerPassenger: 500,
@@ -80,6 +79,7 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
         minVehicleValue: 0,
         maxVehicleValue: 999999999,
         basicRateBps: 500, // 5% base rate
+        fleetRateBps: 475,
         basicMinPremium: 50000,
         fleetMinPremium: 50000,
         // Notice there is NO min/max tonnage here.
@@ -96,6 +96,7 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
         minVehicleValue: 0,
         maxVehicleValue: 999999999,
         basicRateBps: 700, // 7% base rate
+        fleetRateBps: 675,
         basicMinPremium: 50000,
         fleetMinPremium: 100000, // Explicitly handles NCBA's harsh fleet floor rule
       },
@@ -106,6 +107,7 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
         minVehicleValue: 0,
         maxVehicleValue: 999999999,
         basicRateBps: 700,
+        fleetRateBps: 675,
         basicMinPremium: 75000,
         fleetMinPremium: 100000,
       },
@@ -116,6 +118,7 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
         minVehicleValue: 0,
         maxVehicleValue: 999999999,
         basicRateBps: 700,
+        fleetRateBps: 675,
         basicMinPremium: 100000,
         fleetMinPremium: 100000,
       },
@@ -167,7 +170,6 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
     productName: "Commercial Standard",
 
     // Geminia evaluates corporate fleets manually, so we set their automatic discount to 0.
-    fleetDiscountBps: 0,
     pllPerPassenger: 500,
     levies: {
       trainingLevyBps: 20,
@@ -276,7 +278,6 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
     insurerName: "CIC Group",
     productName: "Motor Commercial Hybrid",
     
-    fleetDiscountBps: 0, 
     pllPerPassenger: 500,
     
     levies: {
@@ -387,7 +388,6 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
     insurerName: "Pioneer General",
     productName: "Motor Commercial Hybrid",
 
-    fleetDiscountBps: 475, 
     pllPerPassenger: 500, 
     
     levies: {
@@ -404,14 +404,18 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
         minVehicleValue: 0,
         maxVehicleValue: 999999999,
         basicRateBps: 500, 
+        fleetRateBps: 475,
         basicMinPremium: 50000,
+        fleetMinPremium: 50000,
       },
       {
         usageType: "GENERAL_CARTAGE",
         minVehicleValue: 0,
         maxVehicleValue: 999999999,
         basicRateBps: 500, 
+        fleetRateBps: 475,
         basicMinPremium: 50000,
+        fleetMinPremium: 50000,
       },
     ],
 
@@ -427,7 +431,6 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
     insurerName: "Monarch Insurance",
     productName: "Commercial Motor",
 
-    fleetDiscountBps: 0,
     pllPerPassenger: 500,
     
     levies: {

@@ -4,157 +4,100 @@ import {
   CommercialQuoteResult,
 } from "../types/index";
 import { activeCommercialProducts } from "../data/rates";
+import {
+  calculateTpoBasePremium,
+  calculateComprehensiveBasePremium,
+  leviesCalculator,
+} from "../utils/calculatorUtils";
 
 export default function calculatePremium(
   products: CommercialInsuranceProduct[],
   request: CommercialVehicleRequest,
 ): CommercialQuoteResult[] {
-  return products
-    .map((product) => {
-      function calculateTpoBasePremium(
-        product: CommercialInsuranceProduct,
-        request: CommercialVehicleRequest,
-      ) {
-        const band = product.tpoBands.find(
-          (band) =>
-            band.usageType === request.usageType &&
-            request.tonnage >= band.minTonnage &&
-            request.tonnage <= band.maxTonnage,
-        );
-        if (!band) {
-          throw new Error(
-            `DECLINE: No rating band found for ${product.insurerName} with Tonnage: ${request.tonnage}`,
-          );
-        }
-
-        return band.flatPremium;
-      }
-
-      function calculateComprehensiveBasePremium(
-        product: CommercialInsuranceProduct,
-        request: CommercialVehicleRequest,
-      ) {
-        const band = product.ratingBands.find(
-          (band) =>
-            band.usageType === request.usageType &&
-            (band.minTonnage === undefined ||
-              request.tonnage >= band.minTonnage) &&
-            (band.maxTonnage === undefined ||
-              request.tonnage <= band.maxTonnage) &&
-            request.sumInsured! >= band.minVehicleValue &&
-            request.sumInsured! <= band.maxVehicleValue,
-        );
-        if (!band) {
-          throw new Error(
-            `DECLINE: No rating band found for ${product.insurerName} with Tonnage: ${request.tonnage}`,
-          );
-        }
-
-        let calculatedPremium = Math.floor(
-          (request.sumInsured! * band.basicRateBps) / 10000,
-        );
-
-        if (request.isFleet) {
-          const fleetDiscountApplied = Math.floor(
-            (calculatedPremium * product.fleetDiscountBps) / 10000,
-          );
-          calculatedPremium = calculatedPremium - fleetDiscountApplied;
-        }
-
-        return Math.max(calculatedPremium, band.basicMinPremium);
-      }
-
-      let basePremium: number;
-
-      try {
-        basePremium =
+  // STEP 1: Loop through every insurer in the database
+  return (
+    products
+      .map((product) => {
+        // Step 2: Route to the correct helper function
+        const basePremium =
           request.coverType === "TPO"
             ? calculateTpoBasePremium(product, request)
             : calculateComprehensiveBasePremium(product, request);
-      } catch {
-        return null;
-      }
 
-      let pllCharge = 0;
-      if (request.includePLL) {
-        pllCharge = (request.passengerCount || 0) * product.pllPerPassenger;
-      }
+        // If the helper returned null (decline), stop here and return null for this quote
+        if (basePremium === null) return null;
 
-      let totalRiderPremium = 0;
+        // STEP 3: Add Passenger Legal Liability (PLL)
+        let pllCharge = 0;
+        if (request.includePLL) {
+          pllCharge = (request.passengerCount || 0) * product.pllPerPassenger;
+        }
 
-      if (
-        request.coverType === "COMPREHENSIVE" &&
-        request.sumInsured &&
-        request.selectedRiders &&
-        request.selectedRiders.length > 0
-      ) {
-        request.selectedRiders.forEach((riderId) => {
-          const productRider = product.riders?.find((r) => r.type === riderId);
+        // STEP 4: Add Optional Riders (PVT, Excess Protector)
+        let totalRiderPremium = 0;
 
-          if (productRider) {
-            const band = productRider.bands[0];
+        if (
+          request.coverType === "COMPREHENSIVE" &&
+          request.sumInsured &&
+          request.selectedRiders &&
+          request.selectedRiders.length > 0
+        ) {
+          request.selectedRiders.forEach((riderId) => {
+            // Find the rider config for this specific insurer
+            const productRider = product.riders?.find(
+              (r) => r.type === riderId,
+            );
 
-            if (band.rateType === "PERCENTAGE_BPS") {
-              const calculatedRider = Math.floor(
-                (request.sumInsured! * band.rateValue) / 10000,
-              );
+            if (productRider) {
+              // Hardcoded to only ever look at the first band of the rider
+              const band = productRider.bands[0];
 
-              const finalRiderPremium = Math.max(
-                calculatedRider,
-                band.minPremium,
-              );
-              totalRiderPremium += finalRiderPremium;
+              if (band.rateType === "PERCENTAGE_BPS") {
+                // Calculate rider premium based on total vehicle value
+                const calculatedRider = Math.floor(
+                  (request.sumInsured! * band.rateValue) / 10000,
+                );
+
+                // Enforce the rider's minimum premium rule (e.g. Min 5000)
+                const finalRiderPremium = Math.max(
+                  calculatedRider,
+                  band.minPremium,
+                );
+                totalRiderPremium += finalRiderPremium;
+              }
             }
-          }
-        });
-      }
+          });
+        }
 
-      const combinedPremium = basePremium + pllCharge + totalRiderPremium;
+        // Add everything up before statutory taxes
+        const combinedPremium = basePremium + pllCharge + totalRiderPremium;
 
-      function leviesCalculator(
-        combinedPremium: number,
-        product: CommercialInsuranceProduct,
-      ) {
-        const trainingLevy = Math.floor(
-          (combinedPremium * product.levies.trainingLevyBps) / 10000,
-        );
-        const policyholdersFund = Math.floor(
-          (combinedPremium * product.levies.policyholdersFundBps) / 10000,
-        );
-        const stampDuty = product.levies.stampDuty;
-        return { trainingLevy, policyholdersFund, stampDuty };
-      }
+        // STEP 5: Calculate Levies & Taxes
 
-      const levies = leviesCalculator(combinedPremium, product);
-      const totalLevies =
-        levies.trainingLevy + levies.policyholdersFund + levies.stampDuty;
+        const levies = leviesCalculator(combinedPremium, product);
+        const totalLevies =
+          levies.trainingLevy + levies.policyholdersFund + levies.stampDuty;
 
-      const quote: CommercialQuoteResult = {
-        insurerId: product.insurerId,
-        insurerName: product.insurerName,
-        basicPremium: basePremium,
-        pllCharge: pllCharge,
-        riderPremiums: totalRiderPremium,
-        levies: totalLevies,
-        stampDuty: product.levies.stampDuty,
-        totalPremium: combinedPremium + totalLevies,
-        floorOverrodeDiscount: false,
-        fleetDiscountApplied: false,
-      };
+        // STEP 6: Assemble the Final Quote
+        const quote: CommercialQuoteResult = {
+          insurerId: product.insurerId,
+          insurerName: product.insurerName,
+          basicPremium: basePremium,
+          pllCharge: pllCharge,
+          riderPremiums: totalRiderPremium,
+          levies: totalLevies,
+          stampDuty: product.levies.stampDuty,
+          totalPremium: combinedPremium + totalLevies,
+          floorOverrodeDiscount: false, // Currently hardcoded
+          fleetDiscountApplied: false, // Currently hardcoded
+        };
 
-      return quote;
-    })
-    .filter((quote) => quote !== null) as CommercialQuoteResult[];
+        return quote;
+      })
+
+      // STEP 7: Filter out the failed quotes
+      // Removes all the "null" values returned by the try/catch block
+      .filter((quote) => quote !== null) as CommercialQuoteResult[]
+  );
 }
 
-const testRequest: CommercialVehicleRequest = {
-  coverType: "TPO",
-  tonnage: 55,
-  usageType: "GENERAL_CARTAGE",
-  isFleet: false,
-  includePLL: false,
-  sumInsured: 1500000,
-};
-
-const results = calculatePremium(activeCommercialProducts, testRequest);
-console.log(JSON.stringify(results, null, 2));
