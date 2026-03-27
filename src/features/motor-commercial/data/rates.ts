@@ -266,4 +266,353 @@ export const activeCommercialProducts: CommercialInsuranceProduct[] = [
       },
     ],
   },
+
+  // ==========================================
+  // 3. CIC GROUP
+  // ==========================================
+  {
+    id: "prod_cic_comm_01",
+    insurerId: "ins_cic",
+    insurerName: "CIC Group",
+    productName: "Motor Commercial Hybrid",
+    
+    fleetDiscountBps: 0, 
+    pllPerPassenger: 500,
+    
+    levies: {
+      trainingLevyBps: 20,
+      policyholdersFundBps: 25,
+      stampDuty: 40,
+    },
+
+    tpoBands: [
+      {
+        usageType: "OWN_GOODS",
+        minTonnage: 0,
+        maxTonnage: 3,
+        flatPremium: 15000,
+        fleetPremium: 12000,
+      },
+      {
+        usageType: "OWN_GOODS",
+        minTonnage: 3.01,
+        maxTonnage: 8,
+        flatPremium: 17000,
+        fleetPremium: 15000,
+      },
+      {
+        usageType: "OWN_GOODS",
+        minTonnage: 8.01,
+        maxTonnage: 20,
+        flatPremium: 20000,
+        fleetPremium: 17500,
+      },
+      {
+        usageType: "OWN_GOODS",
+        minTonnage: 20.01,
+        maxTonnage: 30,
+        flatPremium: 25000,
+        fleetPremium: 20000,
+      },
+      {
+        usageType: "OWN_GOODS",
+        minTonnage: 30.01,
+        maxTonnage: 999,
+        flatPremium: 25000,
+        fleetPremium: 22500,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minTonnage: 0,
+        maxTonnage: 3,
+        flatPremium: 15000,
+        fleetPremium: 12000,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minTonnage: 3.01,
+        maxTonnage: 8,
+        flatPremium: 17000,
+        fleetPremium: 15000,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minTonnage: 8.01,
+        maxTonnage: 20,
+        flatPremium: 20000,
+        fleetPremium: 17500,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minTonnage: 20.01,
+        maxTonnage: 30,
+        flatPremium: 25000,
+        fleetPremium: 20000,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minTonnage: 30.01,
+        maxTonnage: 999,
+        flatPremium: 25000,
+        fleetPremium: 22500,
+      },
+    ],
+
+    ratingBands: [
+      {
+        usageType: "OWN_GOODS",
+        minVehicleValue: 0,
+        maxVehicleValue: 999999999,
+        basicRateBps: 500, // 5% base rate
+        basicMinPremium: 50000,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minVehicleValue: 0,
+        maxVehicleValue: 999999999,
+        basicRateBps: 500, 
+        basicMinPremium: 50000,
+      },
+    ],
+
+    riders: [], 
+  },
+
+  // ==========================================
+  // 4. PIONEER GENERAL
+  // ==========================================
+  {
+    id: "prod_pioneer_comm_01",
+    insurerId: "ins_pioneer",
+    insurerName: "Pioneer General",
+    productName: "Motor Commercial Hybrid",
+
+    fleetDiscountBps: 475, 
+    pllPerPassenger: 500, 
+    
+    levies: {
+      trainingLevyBps: 20,
+      policyholdersFundBps: 25,
+      stampDuty: 40,
+    },
+
+    tpoBands: [], 
+
+    ratingBands: [
+      {
+        usageType: "OWN_GOODS",
+        minVehicleValue: 0,
+        maxVehicleValue: 999999999,
+        basicRateBps: 500, 
+        basicMinPremium: 50000,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minVehicleValue: 0,
+        maxVehicleValue: 999999999,
+        basicRateBps: 500, 
+        basicMinPremium: 50000,
+      },
+    ],
+
+    riders: [],
+  },
+
+  // ==========================================
+  // 5. MONARCH INSURANCE
+  // ==========================================
+  {
+    id: "prod_monarch_comm_01",
+    insurerId: "ins_monarch",
+    insurerName: "Monarch Insurance",
+    productName: "Commercial Motor",
+
+    fleetDiscountBps: 0,
+    pllPerPassenger: 500,
+    
+    levies: {
+      trainingLevyBps: 20,
+      policyholdersFundBps: 25,
+      stampDuty: 40,
+    },
+
+    tpoBands: [
+      {
+        usageType: "OWN_GOODS",
+        minTonnage: 0,
+        maxTonnage: 3,
+        flatPremium: 4500,
+        fleetPremium: 4500,
+      },
+      {
+        usageType: "OWN_GOODS",
+        minTonnage: 3.01,
+        maxTonnage: 8,
+        flatPremium: 5500,
+        fleetPremium: 5500,
+      },
+      {
+        usageType: "OWN_GOODS",
+        minTonnage: 8.01,
+        maxTonnage: 12,
+        flatPremium: 6500,
+        fleetPremium: 6500,
+      },
+      {
+        usageType: "OWN_GOODS",
+        minTonnage: 12.01,
+        maxTonnage: 15,
+        flatPremium: 7500,
+        fleetPremium: 7500,
+      },
+      {
+        usageType: "OWN_GOODS",
+        minTonnage: 15.01,
+        maxTonnage: 20,
+        flatPremium: 10000,
+        fleetPremium: 10000,
+      },
+      {
+        usageType: "OWN_GOODS",
+        minTonnage: 20.01,
+        maxTonnage: 999,
+        flatPremium: 15000,
+        fleetPremium: 15000,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minTonnage: 0,
+        maxTonnage: 3,
+        flatPremium: 4500,
+        fleetPremium: 4500,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minTonnage: 3.01,
+        maxTonnage: 8,
+        flatPremium: 5500,
+        fleetPremium: 5500,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minTonnage: 8.01,
+        maxTonnage: 12,
+        flatPremium: 6500,
+        fleetPremium: 6500,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minTonnage: 12.01,
+        maxTonnage: 15,
+        flatPremium: 7500,
+        fleetPremium: 7500,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minTonnage: 15.01,
+        maxTonnage: 20,
+        flatPremium: 10000,
+        fleetPremium: 10000,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minTonnage: 20.01,
+        maxTonnage: 999,
+        flatPremium: 15000,
+        fleetPremium: 15000,
+      },
+    ],
+
+    ratingBands: [
+      {
+        usageType: "OWN_GOODS",
+        minVehicleValue: 500000,
+        maxVehicleValue: 1500000,
+        basicRateBps: 400,
+        basicMinPremium: 30000,
+      },
+      {
+        usageType: "OWN_GOODS",
+        minVehicleValue: 1500001,
+        maxVehicleValue: 2000000,
+        basicRateBps: 375,
+        basicMinPremium: 30000,
+      },
+      {
+        usageType: "OWN_GOODS",
+        minVehicleValue: 2000001,
+        maxVehicleValue: 2500000,
+        basicRateBps: 350,
+        basicMinPremium: 30000,
+      },
+      {
+        usageType: "OWN_GOODS",
+        minVehicleValue: 2500001,
+        maxVehicleValue: 999999999,
+        basicRateBps: 300,
+        basicMinPremium: 30000,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minVehicleValue: 500000,
+        maxVehicleValue: 1500000,
+        basicRateBps: 400,
+        basicMinPremium: 30000,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minVehicleValue: 1500001,
+        maxVehicleValue: 2000000,
+        basicRateBps: 400,
+        basicMinPremium: 30000,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minVehicleValue: 2000001,
+        maxVehicleValue: 2500000,
+        basicRateBps: 400,
+        basicMinPremium: 30000,
+      },
+      {
+        usageType: "GENERAL_CARTAGE",
+        minVehicleValue: 2500001,
+        maxVehicleValue: 999999999,
+        basicRateBps: 375,
+        basicMinPremium: 30000,
+      },
+    ],
+
+    riders: [
+      {
+        id: "monarch_comm_pvt",
+        type: "PVT",
+        name: "Political Violence & Terrorism",
+        isToggleable: true,
+        bands: [
+          {
+            minVehicleValue: 0,
+            maxVehicleValue: 999999999,
+            rateType: "PERCENTAGE_BPS",
+            rateValue: 35, // 0.35%
+            minPremium: 3500,
+          },
+        ],
+      },
+      {
+        id: "monarch_comm_ep",
+        type: "EXCESS_PROTECTOR",
+        name: "Excess Protector",
+        isToggleable: true,
+        bands: [
+          {
+            minVehicleValue: 0,
+            maxVehicleValue: 999999999,
+            rateType: "PERCENTAGE_BPS",
+            rateValue: 50, // 0.5%
+            minPremium: 5000,
+          },
+        ],
+      },
+    ],
+  },
 ];
