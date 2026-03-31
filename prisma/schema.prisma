@@ -25,7 +25,6 @@ model Quote {
 
 model MotorCommercialQuote {
   id               String   @id @default(uuid())
-  idempotencyKey   String   @unique
   userId           String
   insurerId        String
   insurerName      String 

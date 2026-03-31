@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "../../../../../lib/prisma";
 import calculatePremium from "../../../../../features/motor-commercial/engine/calculator";
 import { activeCommercialProducts } from "../../../../../features/motor-commercial/data/rates";
-import { json } from "zod";
+
 
 export async function POST(req: Request) {
   try {
@@ -42,14 +42,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const idempotencyKey = `${userId}-${clientQuote.insurerId}-${JSON.stringify(quoteRequest)}`;
+   
 
     // 4. Persistence using create()
     const savedQuote = await prisma.motorCommercialQuote.create({
       data: {
         // User Info
         userId: userId,
-        idempotencyKey: idempotencyKey,
         insurerId: verifiedQuote.insurerId,
         insurerName: verifiedQuote.insurerName,
         // Quote Request
