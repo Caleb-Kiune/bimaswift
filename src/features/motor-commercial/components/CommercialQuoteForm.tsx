@@ -6,13 +6,15 @@ import {
   commercialQuoteSchema,
   CommercialQuoteFormValues,
 } from "../validations/commercialValidation";
-import { CommercialQuoteResult } from "../types";
+import { CommercialQuoteResult, CommercialVehicleRequest } from "../types";
 
 interface CommercialQuoteFormProps {
   setQuoteResults: (quoteResults: CommercialQuoteResult[] | null) => void;
+  setQuoteRequest: (quoteRequest: CommercialVehicleRequest | null) => void;
 }
 
 export default function CommercialQuoteForm({
+  setQuoteRequest,
   setQuoteResults,
 }: CommercialQuoteFormProps) {
   const {
@@ -53,6 +55,7 @@ export default function CommercialQuoteForm({
       const result = await response.json();
 
       setQuoteResults(result.quotes);
+      setQuoteRequest(data);
 
       console.log("PREMIUM RESULT FROM API:", result.quotes);
     } catch (error) {

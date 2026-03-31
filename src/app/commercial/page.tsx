@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { CommercialQuoteResult } from "../../features/motor-commercial/types";
+import {
+  CommercialQuoteResult,
+  CommercialVehicleRequest,
+} from "../../features/motor-commercial/types";
 import CommercialQuoteForm from "../../features/motor-commercial/components/CommercialQuoteForm";
 import CommercialComparisonTable from "../../features/motor-commercial/components/CommercialComparisonTable";
 import Link from "next/link";
@@ -11,15 +14,15 @@ export default function CommercialPage() {
     CommercialQuoteResult[] | null
   >(null);
 
+  const [quoteRequest, setQuoteRequest] =
+    useState<CommercialVehicleRequest | null>(null);
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-          <h1 className="text-3xl font-bold text-gray-800">
-            Commercial Quote
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-800">Commercial Quote</h1>
 
           <Link
             href="/commercial/history"
@@ -31,7 +34,10 @@ export default function CommercialPage() {
 
         {/* Form Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <CommercialQuoteForm setQuoteResults={setQuoteResults} />
+          <CommercialQuoteForm
+            setQuoteResults={setQuoteResults}
+            setQuoteRequest={setQuoteRequest}
+          />
         </div>
 
         {/* Results Section */}
@@ -40,7 +46,10 @@ export default function CommercialPage() {
             <h2 className="text-xl font-semibold text-gray-800 mb-4">
               Quote Results
             </h2>
-            <CommercialComparisonTable quoteResults={quoteResults} />
+            <CommercialComparisonTable
+              quoteResults={quoteResults}
+              quoteRequest={quoteRequest}
+            />
           </div>
         )}
       </div>
