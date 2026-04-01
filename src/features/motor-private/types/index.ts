@@ -137,3 +137,51 @@ export interface QuoteBreakdown {
   /** The final, exact amount the client must pay (in KES). */
   totalPayable: number;
 }
+
+// 1. Generic Wrapper
+export interface ExplainedValue<TBreakdown> {
+  value: number;
+  breakdown: TBreakdown;
+}
+
+// 2. Specific Breakdowns
+export interface BasicPremiumBreakdown {
+  rateBps: number; 
+  rawCalculation: number; 
+  isMinPremiumApplied: boolean;
+}
+
+export interface RiderBreakdown {
+  rateType: RateType | "OPTION_SELECTION"; 
+  rateValue: number; 
+  rawCalculation: number;
+  isMinPremiumApplied: boolean;
+}
+
+export interface LevyBreakdown {
+  rateType: "PERCENTAGE_BPS" | "FLAT";
+  rateValue: number;
+  rawCalculation: number;
+}
+
+// 3. Detailed Final Breakdown
+export interface DetailedCalculatedRider {
+  id: string;
+  name: string;
+  premium: ExplainedValue<RiderBreakdown>;
+}
+
+export interface GrossPremiumBreakdown {
+  basicPremium: number;
+  calculatedRiders: number;
+}
+
+export interface DetailedQuoteBreakdown {
+  basicPremium: ExplainedValue<BasicPremiumBreakdown>;
+  calculatedRiders: DetailedCalculatedRider[];
+  grossPremium: ExplainedValue<GrossPremiumBreakdown>;
+  itl: ExplainedValue<LevyBreakdown>;
+  phcf: ExplainedValue<LevyBreakdown>;
+  stampDuty: ExplainedValue<LevyBreakdown>;
+  totalPayable: number;
+}
