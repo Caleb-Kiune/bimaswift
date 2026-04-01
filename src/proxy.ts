@@ -5,7 +5,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 // 3. Specifically targeted "/api/quotes" so "/api/rates/active" remains public for the calculator!
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
-  "/api/quotes(.*)" 
+  "/api/quotes/commercial/save(.*)" 
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

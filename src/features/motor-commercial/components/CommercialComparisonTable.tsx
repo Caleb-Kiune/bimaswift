@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@clerk/nextjs"; // 1. Import Clerk's auth hook
+import Link from "next/link"; // Optional: to link users to your sign-in page
 
 import { CommercialQuoteResult, CommercialVehicleRequest } from "../types";
 import DownloadQuoteWrapper from "./DownloadQuoteWrapper";
@@ -14,6 +16,9 @@ export default function CommercialComparisonTable({
   quoteResults,
   quoteRequest,
 }: CommercialComparisonTableProps) {
+  // 2. Extract the user's sign-in status
+  const { isSignedIn } = useAuth();
+
   const [savedQuotesIds, setSavedQuotesIds] = useState<string[]>([]);
   const [savingQuotesIds, setSavingQuotesIds] = useState<string[]>([]);
 
@@ -182,20 +187,31 @@ export default function CommercialComparisonTable({
                 </p>
               </div>
 
-              <button
-                className="mt-4 text-center bg-blue-600 text-white px-4 py-2 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed"
-                disabled={
-                  savingQuotesIds.includes(quote.insurerId) ||
-                  savedQuotesIds.includes(quote.insurerId)
-                }
-                onClick={() => handleSaveQuote(quote)}
-              >
-                {savedQuotesIds.includes(quote.insurerId)
-                  ? "Saved!"
-                  : savingQuotesIds.includes(quote.insurerId)
-                    ? "Saving..."
-                    : "Save Quote"}
-              </button>
+              {/* 3. Conditional Rendering based on Auth Status */}
+              {isSignedIn ? (
+                <button
+                  className="mt-4 w-full text-center bg-blue-600 text-white px-4 py-2 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled={
+                    savingQuotesIds.includes(quote.insurerId) ||
+                    savedQuotesIds.includes(quote.insurerId)
+                  }
+                  onClick={() => handleSaveQuote(quote)}
+                >
+                  {savedQuotesIds.includes(quote.insurerId)
+                    ? "Saved!"
+                    : savingQuotesIds.includes(quote.insurerId)
+                      ? "Saving..."
+                      : "Save Quote"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  className="mt-4 w-full text-center bg-gray-100 text-gray-500 border border-gray-200 px-4 py-2 rounded-md font-medium cursor-not-allowed"
+                >
+                  Sign in to Save Quote
+                </button>
+              )}
 
               <div className="mt-4 text-center">
                 <DownloadQuoteWrapper quote={quote} />
