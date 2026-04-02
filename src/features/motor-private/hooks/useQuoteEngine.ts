@@ -15,29 +15,18 @@ import { useRouter } from "next/navigation";
 import { v4 } from "uuid";
 
 
+import { PrivateQuoteRequest } from "../validations/privateValidation";
+
 export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   const router = useRouter();
 
-  const [vehicleValue, setVehicleValue] = useState<number | "">("");
-  const [yom, setYom] = useState<number | "">("");
-  const [coverType, setCoverType] = useState<"COMPREHENSIVE" | "TPO">(
-    "COMPREHENSIVE",
-  );
+  const [lockedSnapshot, setLockedSnapshot] = useState<PrivateQuoteRequest | null>(null);
   const [products] = useState<InsuranceProduct[] | null>(initialProducts);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [globalRiders, setGlobalRiders] = useState<Record<string, boolean>>({});
 
   const [insurerUpgrades, setInsurerUpgrades] = useState<
     Record<string, Record<string, string | boolean>>
   >({});
-
-  const currentYear = new Date().getFullYear();
-  const forceTpo =
-    (vehicleValue !== "" &&
-      vehicleValue < UNDERWRITING_RULES.MIN_COMPREHENSIVE_VALUE_KES) ||
-    (yom !== "" &&
-      currentYear - yom > UNDERWRITING_RULES.MAX_COMPREHENSIVE_AGE_YEARS);
-  const displayedCoverType = forceTpo ? "TPO" : coverType;
 
   const [rawComparisonQuotes, setRawComparisonQuotes] = useState<any[] | null>(null);
   const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
@@ -51,8 +40,8 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   const sortTrackerRef = useRef({ signature: "", lockedRank: [] as string[] });
 
   // 2. Compute the raw, unsorted quotes via API backend
-  const fetchQuotes = async () => {
-    if (vehicleValue === "" || yom === "") return;
+  const fetchQuotes = async (data: PrivateQuoteRequest) => {
+    setLockedSnapshot(data);
     
     if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -62,23 +51,22 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
     setIsLoadingQuotes(true);
     setInsurerUpgrades({}); // Reset secondary toggles on fresh lookup
     try {
+      const payload = {
+        ...data,
+        requestMode: "MARKET_SCAN",
+      };
+
       const res = await fetch("/api/quotes/private", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: abortControllerRef.current.signal,
-        body: JSON.stringify({
-          requestMode: "MARKET_SCAN",
-          vehicleValue,
-          yom,
-          coverType: displayedCoverType,
-          selectedRiders: globalRiders,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) throw new Error("Failed to fetch quotes");
       
-      const data = await res.json();
-      setRawComparisonQuotes(data.quotes);
+      const responseData = await res.json();
+      setRawComparisonQuotes(responseData.quotes);
     } catch (err: any) {
       if (err.name !== "AbortError") {
          console.error(err);
@@ -89,7 +77,7 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   };
 
   const updateSingleQuote = async (insurerId: string, customCombinedRiders: Record<string, string | boolean>) => {
-      if (vehicleValue === "" || yom === "") return;
+      if (!lockedSnapshot) return;
 
       if (singleAbortControllerRef.current) {
          singleAbortControllerRef.current.abort();
@@ -99,24 +87,24 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
       setRecalculatingInsurers(p => ({ ...p, [insurerId]: true }));
 
       try {
+        const payload = {
+            ...lockedSnapshot,
+            requestMode: "UPDATE_SINGLE",
+            targetInsurerId: insurerId,
+            selectedRiders: customCombinedRiders,
+        };
+
         const res = await fetch("/api/quotes/private", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           signal: singleAbortControllerRef.current.signal,
-          body: JSON.stringify({
-             requestMode: "UPDATE_SINGLE",
-             targetInsurerId: insurerId,
-             vehicleValue,
-             yom,
-             coverType: displayedCoverType,
-             selectedRiders: customCombinedRiders,
-          }),
+          body: JSON.stringify(payload),
         });
 
         if (!res.ok) throw new Error("Failed to update single quote");
         
-        const data = await res.json();
-        const updatedQuoteData = data.quotes[0];
+        const responseData = await res.json();
+        const updatedQuoteData = responseData.quotes[0];
 
         if (updatedQuoteData) {
             setRawComparisonQuotes(prev => {
@@ -134,7 +122,12 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   };
 
   const executeTargetedUpdate = (insurerId: string, newInsurerState: Record<string, string | boolean>) => {
-      const combinedRiders = { ...globalRiders, ...newInsurerState };
+      if (!lockedSnapshot) return;
+
+      const combinedRiders = { 
+          ...(lockedSnapshot.selectedRiders || {}), 
+          ...newInsurerState 
+      };
 
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
@@ -160,13 +153,6 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
       sortTrackerRef.current.lockedRank,
     );
   }, [rawComparisonQuotes]);
-
-  const handleGlobalRiderToggle = (type: string) => {
-    setGlobalRiders((prev) => ({
-      ...prev,
-      [type]: !prev[type],
-    }));
-  };
 
   const handleInsurerRiderToggle = (insurerId: string, type: string) => {
     setInsurerUpgrades((prev) => {
@@ -213,10 +199,12 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
     const selectedProduct = products?.find((p) => p.insurerId === insurerId);
     const insurerName = selectedProduct?.insurerName || "Selected Insurer";
 
+    if (!lockedSnapshot) return;
+
     const whatsappMessage = formatWhatsAppQuote(
       insurerName,
-      vehicleValue as number,
-      displayedCoverType,
+      lockedSnapshot.vehicleValue,
+      lockedSnapshot.coverType,
       quoteBreakdown,
     );
 
@@ -230,14 +218,16 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   };
 
   const handleSaveQuote = async (insurerId: string, riderIds: string[]) => {
+    if (!lockedSnapshot) return;
+
     setIsSubmitting(true);
     const idempotencyKey = v4();
 
     const vehicleData = {
       idempotencyKey,
-      vehicleValue,
-      yom,
-      coverType: displayedCoverType,
+      vehicleValue: lockedSnapshot.vehicleValue,
+      yom: lockedSnapshot.yom,
+      coverType: lockedSnapshot.coverType,
       insurerId,
       selectedRiderIds: riderIds,
     };
@@ -265,25 +255,16 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   };
 
   return {
-    vehicleValue,
-    setVehicleValue,
-    yom,
-    setYom,
-    coverType,
-    setCoverType,
+    lockedSnapshot,
     products,
     isSubmitting,
-    forceTpo,
-    displayedCoverType,
     comparisonQuotes,
     fetchQuotes,
     isLoadingQuotes,
     recalculatingInsurers,
     handleCopyQuote,
     handleSaveQuote,
-    globalRiders,
     insurerUpgrades,
-    handleGlobalRiderToggle,
     handleInsurerRiderToggle,
     handleInsurerRiderOptionChange,
   };

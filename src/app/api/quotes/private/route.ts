@@ -38,27 +38,18 @@ export async function POST(req: Request) {
 
     // Calculate quotes for relevant underwriter products
     const quotes = productsToProcess.map((product) => {
-      // Safely extract selected options or generic parent IDs based on truthy dictionary keys
-      const productSpecificRiderIds = product.riders
-        .filter((rider) => selectedRiders[rider.id] || selectedRiders[rider.type])
-        .map((rider) => {
-           const selectedValue = selectedRiders[rider.type] || selectedRiders[rider.id];
-           if (typeof selectedValue === "string") return selectedValue;
-           return rider.id;
-        });
-
       const quoteBreakdown = calculatePremium(
         vehicleValue,
         coverType,
         product,
-        productSpecificRiderIds
+        selectedRiders
       );
 
       return {
         insurerId: product.insurerId,
         insurerName: product.insurerName,
         quote: quoteBreakdown,
-        riderIds: productSpecificRiderIds,
+        riderIds: quoteBreakdown.calculatedRiders.map((r) => r.id),
       };
     });
 

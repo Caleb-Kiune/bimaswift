@@ -1,63 +1,54 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
+import { UseFormRegister, FieldErrors, UseFormSetValue } from "react-hook-form";
+import { PrivateQuoteRequest } from "../validations/privateValidation";
 
 interface Props {
-  vehicleValue: number | "";
-  setVehicleValue: (val: number | "") => void;
-  yom: number | "";
-  setYom: (val: number | "") => void;
+  register: UseFormRegister<PrivateQuoteRequest>;
+  errors: FieldErrors<PrivateQuoteRequest>;
+  setValue: UseFormSetValue<PrivateQuoteRequest>;
   displayedCoverType: "COMPREHENSIVE" | "TPO";
-  setCoverType: (val: "COMPREHENSIVE" | "TPO") => void;
   forceTpo: boolean;
   isSubmitting: boolean;
 }
 
 export default function VehicleInputForm({
-  vehicleValue,
-  setVehicleValue,
-  yom,
-  setYom,
+  register,
+  errors,
+  setValue,
   displayedCoverType,
-  setCoverType,
   forceTpo,
   isSubmitting,
 }: Props) {
-  // 1. Track if the user has interacted with the fields for validation
-  const [touchedValue, setTouchedValue] = useState(false);
-  const [touchedYom, setTouchedYom] = useState(false);
-
   const currentYear = new Date().getFullYear();
 
   // 2. Formatters & Handlers
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const cursorPosition = input.selectionStart || 0;
+    const valueBefore = input.value;
+    
     // Strip everything except digits
-    const rawValue = e.target.value.replace(/\D/g, "");
-    setVehicleValue(rawValue ? Number(rawValue) : "");
+    const rawValue = valueBefore.replace(/[^0-9]/g, "");
+    if (Number(rawValue) > 100000000) {
+      input.value = valueBefore.slice(0, cursorPosition - 1) + valueBefore.slice(cursorPosition);
+      return;
+    }
+
+    const formattedValue = rawValue ? Number(rawValue).toLocaleString("en-KE") : "";
+    
+    // We gracefully measure commas before and after the cursor to prevent jumping
+    const commasBefore = (valueBefore.slice(0, cursorPosition).match(/,/g) || []).length;
+    const commasAfter = (formattedValue.slice(0, cursorPosition).match(/,/g) || []).length;
+    
+    input.value = formattedValue;
+    const newPosition = cursorPosition + (commasAfter - commasBefore);
+    
+    requestAnimationFrame(() => {
+      input.setSelectionRange(newPosition, newPosition);
+    });
   };
-
-  const handleYomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/\D/g, "");
-    // Prevent typing more than 4 digits for a year
-    if (rawValue.length > 4) return;
-    setYom(rawValue ? Number(rawValue) : "");
-  };
-
-  // 3. Validation Logic
-  const valueError =
-    touchedValue &&
-    vehicleValue !== "" &&
-    (vehicleValue < 200000 || vehicleValue > 100000000)
-      ? "Value must be between KES 200,000 and 100,000,000"
-      : null;
-
-  const yomError =
-    touchedYom && yom !== "" && (yom < 1980 || yom > currentYear)
-      ? `Year must be between 1980 and ${currentYear}`
-      : null;
-
-  // Format the display value with commas
-  const displayValue = vehicleValue ? vehicleValue.toLocaleString("en-KE") : "";
 
   return (
     <div className="space-y-5">
@@ -70,7 +61,7 @@ export default function VehicleInputForm({
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <span
-                className={`font-medium ${valueError ? "text-red-400" : "text-zinc-500"}`}
+                className={`font-medium ${errors.vehicleValue ? "text-red-400" : "text-zinc-500"}`}
               >
                 KES
               </span>
@@ -78,13 +69,18 @@ export default function VehicleInputForm({
             <input
               type="text"
               inputMode="numeric"
-              value={displayValue}
-              onChange={handleValueChange}
-              onBlur={() => setTouchedValue(true)}
               onWheel={(e) => (e.target as HTMLInputElement).blur()}
               disabled={isSubmitting}
+              {...register("vehicleValue", {
+                setValueAs: (v) => {
+                  if (!v) return undefined;
+                  const num = Number(String(v).replace(/,/g, ""));
+                  return isNaN(num) ? undefined : num;
+                },
+                onChange: handleValueChange,
+              })}
               className={`w-full pl-14 pr-4 py-3.5 bg-zinc-50 border rounded-xl font-medium text-lg focus:bg-white focus:outline-none focus:ring-2 transition-colors disabled:opacity-60 ${
-                valueError
+                errors.vehicleValue
                   ? "border-red-400 text-red-900 focus:ring-red-500 focus:border-red-500 bg-red-50/30"
                   : "border-zinc-200 text-zinc-900 focus:ring-indigo-500 focus:border-indigo-500"
               }`}
@@ -93,9 +89,9 @@ export default function VehicleInputForm({
           </div>
           {/* Helper / Error Text */}
           <p
-            className={`text-xs flex items-center gap-1 ${valueError ? "text-red-500 font-medium" : "text-zinc-400"}`}
+            className={`text-xs flex items-center gap-1 ${errors.vehicleValue ? "text-red-500 font-medium" : "text-zinc-400"}`}
           >
-            {valueError ? (
+            {errors.vehicleValue ? (
               <>
                 <svg
                   className="w-3.5 h-3.5"
@@ -110,7 +106,7 @@ export default function VehicleInputForm({
                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                   />
                 </svg>{" "}
-                {valueError}
+                {errors.vehicleValue.message}
               </>
             ) : (
               "Estimated market value of the car"
@@ -125,13 +121,16 @@ export default function VehicleInputForm({
           </label>
           <input
             type="number"
-            value={yom}
-            onChange={handleYomChange}
-            onBlur={() => setTouchedYom(true)}
             onWheel={(e) => (e.target as HTMLInputElement).blur()}
             disabled={isSubmitting}
+            onKeyDown={(e) => {
+              if (e.key === "-" || e.key === "e") e.preventDefault();
+            }}
+            {...register("yom", {
+               setValueAs: (v) => (v === "" ? undefined : Number(v)),
+            })}
             className={`w-full px-4 py-3.5 bg-zinc-50 border rounded-xl font-medium text-lg focus:bg-white focus:outline-none focus:ring-2 transition-colors disabled:opacity-60 ${
-              yomError
+              errors.yom
                 ? "border-red-400 text-red-900 focus:ring-red-500 focus:border-red-500 bg-red-50/30"
                 : "border-zinc-200 text-zinc-900 focus:ring-indigo-500 focus:border-indigo-500"
             }`}
@@ -139,9 +138,9 @@ export default function VehicleInputForm({
           />
           {/* Helper / Error Text */}
           <p
-            className={`text-xs flex items-center gap-1 ${yomError ? "text-red-500 font-medium" : "text-zinc-400"}`}
+            className={`text-xs flex items-center gap-1 ${errors.yom ? "text-red-500 font-medium" : "text-zinc-400"}`}
           >
-            {yomError ? (
+            {errors.yom ? (
               <>
                 <svg
                   className="w-3.5 h-3.5"
@@ -156,10 +155,10 @@ export default function VehicleInputForm({
                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                   />
                 </svg>{" "}
-                {yomError}
+                {errors.yom.message}
               </>
             ) : (
-              `Must be 1980 or newer`
+              `Must be between 1980 and ${currentYear}`
             )}
           </p>
         </div>
@@ -191,7 +190,7 @@ export default function VehicleInputForm({
         <div className="grid grid-cols-2 gap-2 p-1 bg-zinc-100/80 rounded-xl border border-zinc-200/50">
           <button
             type="button"
-            onClick={() => setCoverType("COMPREHENSIVE")}
+            onClick={() => setValue("coverType", "COMPREHENSIVE")}
             disabled={forceTpo || isSubmitting}
             className={`py-3 text-sm font-bold rounded-lg transition-all ${
               displayedCoverType === "COMPREHENSIVE"
@@ -203,7 +202,7 @@ export default function VehicleInputForm({
           </button>
           <button
             type="button"
-            onClick={() => setCoverType("TPO")}
+            onClick={() => setValue("coverType", "TPO")}
             disabled={isSubmitting}
             className={`py-3 text-sm font-bold rounded-lg transition-all ${
               displayedCoverType === "TPO"

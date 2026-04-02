@@ -1,9 +1,16 @@
 "use client";
 
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { 
+  privateQuoteSchema, 
+  PrivateQuoteRequest 
+} from "../validations/privateValidation";
 import { useQuoteEngine } from "@/src/features/motor-private/hooks/useQuoteEngine";
 import VehicleInputForm from "./VehicleInputForm";
 import QuoteMarketplace from "./ComparisonTable";
 import { InsuranceProduct } from "../types";
+import { UNDERWRITING_RULES } from "@/src/features/motor-private/utils/constants";
 
 export default function QuoteForm({
   initialProducts,
@@ -11,41 +18,67 @@ export default function QuoteForm({
   initialProducts: InsuranceProduct[];
 }) {
   const {
-    vehicleValue,
-    setVehicleValue,
-    yom,
-    setYom,
-    setCoverType,
+    lockedSnapshot,
     products,
     isSubmitting,
-    forceTpo,
-    displayedCoverType,
     comparisonQuotes,
     fetchQuotes,
     isLoadingQuotes,
     recalculatingInsurers,
     handleSaveQuote,
-    globalRiders,
-    handleGlobalRiderToggle,
     insurerUpgrades,
     handleInsurerRiderToggle,
     handleInsurerRiderOptionChange,
   } = useQuoteEngine(initialProducts);
 
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isValid },
+  } = useForm<PrivateQuoteRequest>({
+    resolver: zodResolver(privateQuoteSchema),
+    mode: "onBlur", // validate on blur
+    defaultValues: {
+      requestMode: "MARKET_SCAN",
+      coverType: "COMPREHENSIVE",
+      selectedRiders: {},
+    },
+  });
+
+  const vehicleValue = watch("vehicleValue");
+  const yom = watch("yom");
+  const coverType = watch("coverType");
+  const selectedRiders = watch("selectedRiders") || {};
+
+  const currentYear = new Date().getFullYear();
+  const forceTpo =
+    (!!vehicleValue && vehicleValue < UNDERWRITING_RULES.MIN_COMPREHENSIVE_VALUE_KES) ||
+    (!!yom && currentYear - yom > UNDERWRITING_RULES.MAX_COMPREHENSIVE_AGE_YEARS);
+
+  const displayedCoverType = forceTpo ? "TPO" : coverType;
+
+  const onSubmit = async (data: PrivateQuoteRequest) => {
+    // If forceTpo is active, silently compel TPO coverage to backend
+    if (forceTpo) {
+      data.coverType = "TPO";
+    }
+    await fetchQuotes(data);
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
       {/* THE INPUT SECTION */}
       <div className="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm">
-        <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <VehicleInputForm
-            vehicleValue={vehicleValue}
-            setVehicleValue={setVehicleValue}
-            yom={yom}
-            setYom={setYom}
+            register={register}
+            errors={errors}
+            setValue={setValue}
             displayedCoverType={displayedCoverType}
-            setCoverType={setCoverType}
             forceTpo={forceTpo}
-            isSubmitting={isSubmitting}
+            isSubmitting={isLoadingQuotes}
           />
 
           {/* GLOBAL COMMODITY RIDERS (Sleek Toggle Bar) */}
@@ -64,8 +97,7 @@ export default function QuoteForm({
                     <input
                       type="checkbox"
                       className="sr-only peer"
-                      checked={!!globalRiders["PVT"]}
-                      onChange={() => handleGlobalRiderToggle("PVT")}
+                      {...register("selectedRiders.PVT")}
                     />
                     <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                   </div>
@@ -80,10 +112,7 @@ export default function QuoteForm({
                     <input
                       type="checkbox"
                       className="sr-only peer"
-                      checked={!!globalRiders["EXCESS_PROTECTOR"]}
-                      onChange={() =>
-                        handleGlobalRiderToggle("EXCESS_PROTECTOR")
-                      }
+                      {...register("selectedRiders.EXCESS_PROTECTOR")}
                     />
                     <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                   </div>
@@ -101,9 +130,8 @@ export default function QuoteForm({
 
           <div className="pt-4 flex justify-end border-t border-zinc-100">
              <button 
-                type="button" 
-                onClick={fetchQuotes}
-                disabled={isLoadingQuotes || vehicleValue === "" || yom === ""}
+                type="submit" 
+                disabled={isLoadingQuotes || !vehicleValue || !yom}
                 className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-xl shadow-sm transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
              >
                 {isLoadingQuotes && (
@@ -116,6 +144,7 @@ export default function QuoteForm({
       </div>
 
       {/* THE MARKETPLACE */}
+      {/* We pass the locked display type to the marketplace, so the cards reflect what they were quoted with */}
       <QuoteMarketplace
         comparisonQuotes={comparisonQuotes}
         isSubmitting={isSubmitting}
@@ -124,7 +153,7 @@ export default function QuoteForm({
         insurerUpgrades={insurerUpgrades}
         handleInsurerRiderToggle={handleInsurerRiderToggle}
         handleInsurerRiderOptionChange={handleInsurerRiderOptionChange}
-        displayedCoverType={displayedCoverType}
+        displayedCoverType={lockedSnapshot?.coverType || displayedCoverType}
         recalculatingInsurers={recalculatingInsurers}
       />
     </div>

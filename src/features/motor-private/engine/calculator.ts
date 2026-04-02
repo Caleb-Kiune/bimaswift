@@ -132,7 +132,7 @@ export default function calculatePremium(
   vehicleValue: number,
   coverType: "COMPREHENSIVE" | "TPO",
   product: InsuranceProduct,
-  selectedRiderIds: string[],
+  selectedRiders: Record<string, string | boolean>,
 ): DetailedQuoteBreakdown {
   // --- 1. INITIALIZATION ---
   let basicPremium: ExplainedValue<BasicPremiumBreakdown> = {
@@ -160,48 +160,61 @@ export default function calculatePremium(
     // A. Compute the foundational Comprehensive basic premium
     basicPremium = calculateBasicPremium(vehicleValue, product.ratingBands);
 
-    // B. Process all selected optional riders
-    for (const selectedId of selectedRiderIds) {
-      // 1. Find the parent rider.
-      // It matches if the parent ID matches, OR if one of its sub-options matches.
-      const parentRider = product.riders.find(
-        (r) =>
-          r.id === selectedId ||
-          (r.options && r.options.some((opt) => opt.id === selectedId)),
-      );
+    // B. Process all optional riders
+    for (const rider of product.riders) {
+      let isExplicitlySelected = false;
+      let selectedOptionId: string | undefined = undefined;
 
-      if (parentRider) {
-        let premiumForThisRider: ExplainedValue<RiderBreakdown>;
-        let displayLabel = parentRider.name;
+      const userSelection = selectedRiders[rider.type] || selectedRiders[rider.id];
 
-        // 2. Check if the user selected a specific option tier (e.g., 20 Days)
-        const selectedOption = parentRider.options?.find(
-          (opt) => opt.id === selectedId,
+      if (userSelection) {
+        isExplicitlySelected = true;
+        if (typeof userSelection === "string") {
+          selectedOptionId = userSelection; // user explicitly chose a specific option
+        }
+      }
+
+      // If neither explicitly selected NOR an option-based rider, mathematically check if it's FREE
+      let evaluateAsFree = false;
+      if (!isExplicitlySelected && !rider.options) {
+        const activeBand = rider.bands?.find(
+          (band) => band.minVehicleValue <= vehicleValue && band.maxVehicleValue >= vehicleValue
         );
+        if (activeBand?.rateType === "FREE") {
+          evaluateAsFree = true;
+        }
+      }
 
-        if (selectedOption) {
-          // THE NEW WAY: If they selected a specific option, math is easy! Just grab the flat premium.
-          premiumForThisRider = {
-            value: selectedOption.premium,
-            breakdown: {
-              rateType: "OPTION_SELECTION",
-              rateValue: selectedOption.premium,
-              rawCalculation: selectedOption.premium,
-              isMinPremiumApplied: false,
-            },
-          };
-          displayLabel = selectedOption.label; // e.g., "20 Days (Limit: KES 60,000)"
+      if (isExplicitlySelected || evaluateAsFree) {
+        let premiumForThisRider: ExplainedValue<RiderBreakdown>;
+        let displayLabel = rider.name;
+        let usedId = rider.id;
+
+        // 2. Compute based on options vs bands
+        if (selectedOptionId) {
+          const selectedOption = rider.options?.find((opt) => opt.id === selectedOptionId);
+          if (selectedOption) {
+            premiumForThisRider = {
+              value: selectedOption.premium,
+              breakdown: {
+                rateType: "OPTION_SELECTION",
+                rateValue: selectedOption.premium,
+                rawCalculation: selectedOption.premium,
+                isMinPremiumApplied: false,
+              },
+            };
+            displayLabel = selectedOption.label;
+            usedId = selectedOption.id;
+          } else {
+            continue; // Skip if invalid option was somehow provided
+          }
         } else {
-          // THE OLD WAY: It's a standard rider (like PVT or Excess Protector). Run the bands calculation.
-          premiumForThisRider = calculateRiderPremium(
-            vehicleValue,
-            parentRider,
-          );
+          premiumForThisRider = calculateRiderPremium(vehicleValue, rider);
         }
 
         // 3. Push to the final receipt
         calculatedRiders.push({
-          id: selectedId,
+          id: usedId,
           name: displayLabel,
           premium: premiumForThisRider,
         });
