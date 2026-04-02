@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Document,
   Page,
@@ -132,7 +131,9 @@ export default function QuoteDocument({ quote }: QuoteDocumentProps) {
             <View>
               <Text style={styles.label}>Basic Premium</Text>
               <Text style={{ fontSize: 9, color: "#6b7280" }}>
-                Applied Rate: {formatRate(quote.basePremiumDetails.rateValue)} 
+                {quote.basePremiumDetails.rateType === "FLAT" 
+                  ? "Flat Rate" 
+                  : `Applied Rate: ${formatRate(quote.basePremiumDetails.rateValue)}`}
                 {quote.basePremiumDetails.minimumApplied && " (Minimum Premium Enforced)"}
               </Text>
             </View>
@@ -145,7 +146,10 @@ export default function QuoteDocument({ quote }: QuoteDocumentProps) {
               <View>
                 <Text style={styles.label}>{rider.name}</Text>
                 <Text style={{ fontSize: 9, color: "#6b7280" }}>
-                  {rider.rateType === "FREE" ? "Complimentary Benefit" : `Applied Rate: ${formatRate(rider.rateValue)}`}
+                  {rider.rateType === "FREE" && "Complimentary Benefit"}
+                  {rider.rateType === "FLAT" && "Flat Rate"}
+                  {rider.rateType === "PERCENTAGE_BPS" && `Applied Rate: ${formatRate(rider.rateValue)}`}
+                  {rider.minimumApplied && " (Minimum Applied)"}
                 </Text>
               </View>
               <Text style={styles.value}>

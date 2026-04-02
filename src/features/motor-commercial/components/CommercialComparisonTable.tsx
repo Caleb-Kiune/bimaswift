@@ -106,7 +106,9 @@ export default function CommercialComparisonTable({
                 </div>
                 <div className="flex gap-2 mt-1">
                   <span className="text-[10px] text-gray-400">
-                    Rate: {formatRate(quote.basePremiumDetails.rateValue)}
+                    {quote.basePremiumDetails.rateType === "FLAT"
+                      ? "Flat Rate"
+                      : `Rate: ${formatRate(quote.basePremiumDetails.rateValue)}`}
                   </span>
                   {quote.basePremiumDetails.minimumApplied && (
                     <span className="text-[10px] text-amber-600 font-medium">
@@ -130,9 +132,9 @@ export default function CommercialComparisonTable({
                       <div>
                         <p className="text-xs text-gray-700">{rider.name}</p>
                         <p className="text-[10px] text-gray-400">
-                          {rider.rateType === "FREE"
-                            ? "Complimentary"
-                            : `Rate: ${formatRate(rider.rateValue)}`}
+                          {rider.rateType === "FREE" && "Complimentary"}
+                          {rider.rateType === "FLAT" && "Flat Rate"}
+                          {rider.rateType === "PERCENTAGE_BPS" && `Rate: ${formatRate(rider.rateValue)}`}
                           {rider.minimumApplied && " (Min. Applied)"}
                         </p>
                       </div>
