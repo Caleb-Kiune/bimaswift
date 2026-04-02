@@ -2,6 +2,8 @@ import { prisma } from "@/src/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import calculatePremium from "@/src/features/motor-private/engine/calculator";
+import { activeProducts as activePrivateProducts } from "@/src/features/motor-private/data/insurers";
 
 export async function POST(req: Request) {
   try {
@@ -17,18 +19,51 @@ export async function POST(req: Request) {
       yom,
       coverType,
       insurerId,
-      selectedRiderIds,
+      selectedRiderIds = [],
     } = await req.json();
 
-    const savedQuote = await prisma.quote.create({
+    const product = activePrivateProducts.find((p) => p.insurerId === insurerId);
+    if (!product) {
+       return NextResponse.json({ error: "Insurer not found" }, { status: 404 });
+    }
+
+    // Zero-Trust: Recalculate on the server
+    const productSpecificRiderIds = product.riders
+        .filter((rider) => selectedRiderIds.includes(rider.type))
+        .map((rider) => rider.id);
+
+    const quoteBreakdown = calculatePremium(
+        vehicleValue,
+        coverType,
+        product,
+        productSpecificRiderIds
+    );
+
+    const savedQuote = await prisma.motorPrivateQuote.create({
       data: {
         idempotencyKey,
-        vehicleValue,
-        yom,
-        coverType,
-        insurerId,
-        selectedRiderIds,
         userId,
+        insurerId,
+        insurerName: product.insurerName,
+        vehicleValue,
+        yom: parseInt(yom, 10),
+        coverType,
+        selectedRiderIds,
+        
+        basicPremium: quoteBreakdown.basicPremium.value,
+        grossPremium: quoteBreakdown.grossPremium.value,
+        itl: quoteBreakdown.itl.value,
+        phcf: quoteBreakdown.phcf.value,
+        stampDuty: quoteBreakdown.stampDuty.value,
+        totalPayable: quoteBreakdown.totalPayable,
+
+        basicPremiumDetails: quoteBreakdown.basicPremium.breakdown as any,
+        calculatedRiders: quoteBreakdown.calculatedRiders as any,
+        levyDetails: {
+          itl: quoteBreakdown.itl.breakdown,
+          phcf: quoteBreakdown.phcf.breakdown,
+          stampDuty: quoteBreakdown.stampDuty.breakdown,
+        } as any,
       },
     });
 

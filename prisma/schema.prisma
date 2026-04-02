@@ -59,5 +59,31 @@ model MotorCommercialQuote {
   createdAt        DateTime @default(now())
 }
 
+model MotorPrivateQuote {
+  id               String   @id @default(uuid())
+  idempotencyKey   String   @unique
+  userId           String
+  insurerId        String
+  insurerName      String
 
+  // Request Context
+  vehicleValue     Int
+  yom              Int
+  coverType        String
+  selectedRiderIds String[]
 
+  // Premium Totals
+  basicPremium     Float
+  grossPremium     Float
+  itl              Float
+  phcf             Float
+  stampDuty        Float
+  totalPayable     Float
+
+  // Transparency Details
+  basicPremiumDetails Json?
+  calculatedRiders    Json?
+  levyDetails         Json?
+
+  createdAt        DateTime @default(now())
+}

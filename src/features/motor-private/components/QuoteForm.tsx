@@ -21,6 +21,8 @@ export default function QuoteForm({
     forceTpo,
     displayedCoverType,
     comparisonQuotes,
+    fetchQuotes,
+    isLoadingQuotes,
     handleSaveQuote,
     globalRiders,
     handleGlobalRiderToggle,
@@ -95,6 +97,20 @@ export default function QuoteForm({
               Syncing live market rates...
             </div>
           )}
+
+          <div className="pt-4 flex justify-end border-t border-zinc-100">
+             <button 
+                type="button" 
+                onClick={fetchQuotes}
+                disabled={isLoadingQuotes || vehicleValue === "" || yom === ""}
+                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-xl shadow-sm transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+             >
+                {isLoadingQuotes && (
+                  <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                )}
+                {isLoadingQuotes ? "Fetching Market Rates..." : "Get Quotes"}
+             </button>
+          </div>
         </form>
       </div>
 

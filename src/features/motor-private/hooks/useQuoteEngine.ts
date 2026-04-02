@@ -39,55 +39,42 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
       currentYear - yom > UNDERWRITING_RULES.MAX_COMPREHENSIVE_AGE_YEARS);
   const displayedCoverType = forceTpo ? "TPO" : coverType;
 
+  const [rawComparisonQuotes, setRawComparisonQuotes] = useState<any[] | null>(null);
+  const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
+
   // 1. Establish the stateful tracker
   const sortTrackerRef = useRef({ signature: "", lockedRank: [] as string[] });
 
-  // 2. Compute the raw, unsorted quotes based on user input
-  const rawComparisonQuotes =
-    products && vehicleValue !== "" && yom !== ""
-      ? products.map((product) => {
-          const combinedRidersForThisCard = {
-            ...globalRiders,
-            ...(insurerUpgrades[product.insurerId] || {}),
-          };
+  // 2. Compute the raw, unsorted quotes via API backend
+  const fetchQuotes = async () => {
+    if (vehicleValue === "" || yom === "") return;
+    
+    setIsLoadingQuotes(true);
+    try {
+      const selectedRiderIds = Object.keys(globalRiders).filter(k => globalRiders[k]);
+      
+      const res = await fetch("/api/quotes/private", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vehicleValue,
+          yom,
+          coverType: displayedCoverType,
+          selectedRiderIds,
+        }),
+      });
 
-          const productSpecificRiderIds = product.riders
-            .filter((rider) => {
-              if (combinedRidersForThisCard[rider.type]) return true;
+      if (!res.ok) throw new Error("Failed to fetch quotes");
+      
+      const data = await res.json();
+      setRawComparisonQuotes(data.quotes);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingQuotes(false);
+    }
+  };
 
-              const activeBand = rider.bands.find(
-                (b) =>
-                  vehicleValue >= b.minVehicleValue &&
-                  vehicleValue <= b.maxVehicleValue,
-              );
-
-              if (activeBand && activeBand.rateType === "FREE") {
-                return true;
-              }
-
-              return false;
-            })
-            .map((rider) => {
-              const selectedValue = combinedRidersForThisCard[rider.type];
-              if (typeof selectedValue === "string") return selectedValue;
-              return rider.id;
-            });
-
-          const quote = calculatePremium(
-            vehicleValue,
-            displayedCoverType,
-            product,
-            productSpecificRiderIds,
-          );
-
-          return {
-            insurerId: product.insurerId,
-            insurerName: product.insurerName,
-            quote: quote,
-            riderIds: productSpecificRiderIds,
-          };
-        })
-      : null;
 
   // 3. Apply the pure functions against the stateful tracker
   const comparisonQuotes = useMemo(() => {
@@ -214,6 +201,8 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
     forceTpo,
     displayedCoverType,
     comparisonQuotes,
+    fetchQuotes,
+    isLoadingQuotes,
     handleCopyQuote,
     handleSaveQuote,
     globalRiders,
