@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { requestMode, vehicleValue, coverType, selectedRiders, targetInsurerId } = validationResult.data;
+    const { requestMode, vehicleValue, coverType, selectedRiders = {}, targetInsurerId } = validationResult.data;
 
     if (requestMode === "UPDATE_SINGLE" && !targetInsurerId) {
       return NextResponse.json(

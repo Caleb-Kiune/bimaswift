@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "../../../../../lib/prisma";
+import { Prisma } from "@prisma/client";
 import calculatePremium from "../../../../../features/motor-commercial/engine/calculator";
 import { activeCommercialProducts } from "../../../../../features/motor-commercial/data/rates";
 
@@ -69,9 +70,9 @@ export async function POST(req: Request) {
         totalPremium: verifiedQuote.totalPremium,
 
         // Breakdown
-        basePremiumDetails: verifiedQuote.basePremiumDetails as any,
-        riderDetails: verifiedQuote.riderDetails as any,
-        levyDetails: verifiedQuote.levyDetails as any,
+        basePremiumDetails: verifiedQuote.basePremiumDetails as unknown as Prisma.InputJsonValue,
+        riderDetails: verifiedQuote.riderDetails as unknown as Prisma.InputJsonValue,
+        levyDetails: verifiedQuote.levyDetails as unknown as Prisma.InputJsonValue,
 
         // Flags
         floorOverrodeDiscount: verifiedQuote.floorOverrodeDiscount,

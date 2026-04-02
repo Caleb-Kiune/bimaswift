@@ -1,5 +1,4 @@
 import { useState, useRef, useMemo } from "react";
-import calculatePremium from "@/src/features/motor-private/engine/calculator";
 import {
   generateQuoteSignature,
   computePriceBasedRank,
@@ -9,8 +8,15 @@ import {
   InsuranceProduct,
   DetailedQuoteBreakdown,
 } from "@/src/features/motor-private/types";
+
+// Shape of a single quote returned from the API
+interface ApiQuoteResult {
+  insurerId: string;
+  insurerName: string;
+  quote: DetailedQuoteBreakdown;
+  riderIds: string[];
+}
 import { formatWhatsAppQuote } from "@/src/features/motor-private/utils/formatters";
-import { UNDERWRITING_RULES } from "@/src/features/motor-private/utils/constants";
 import { useRouter } from "next/navigation";
 import { v4 } from "uuid";
 
@@ -28,7 +34,7 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
     Record<string, Record<string, string | boolean>>
   >({});
 
-  const [rawComparisonQuotes, setRawComparisonQuotes] = useState<any[] | null>(null);
+  const [rawComparisonQuotes, setRawComparisonQuotes] = useState<ApiQuoteResult[] | null>(null);
   const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
   const [recalculatingInsurers, setRecalculatingInsurers] = useState<Record<string, boolean>>({});
 
@@ -67,8 +73,8 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
       
       const responseData = await res.json();
       setRawComparisonQuotes(responseData.quotes);
-    } catch (err: any) {
-      if (err.name !== "AbortError") {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name !== "AbortError") {
          console.error(err);
       }
     } finally {
@@ -112,8 +118,8 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
                 return prev.map(q => q.insurerId === insurerId ? updatedQuoteData : q);
             });
         }
-      } catch (err: any) {
-        if (err.name !== "AbortError") {
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== "AbortError") {
             console.error("Update single quote error", err);
         }
       } finally {

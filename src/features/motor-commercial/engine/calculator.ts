@@ -68,36 +68,3 @@ export default function calculatePremium(
     .filter((quote) => quote !== null) as CommercialQuoteResult[];
 }
 
-
-// ======================================================================
-// REAL DATA TERMINAL TEST (APPENDED TO BOTTOM)
-// ======================================================================
-
-// 1. IMPORT YOUR REAL DATA (Fixed the variable name!)
-import { activeCommercialProducts } from "../data/rates"; 
-
-const testRequest = {
-  coverType: "TPO",
-  tonnage: 3,
-  usageType: "GENERAL_CARTAGE",
-  isFleet: false,
-  includePLL: false,
-} as any;
-
-// 2. RUN THE ENGINE WITH REAL DATA
-const results = calculatePremium(activeCommercialProducts, testRequest);
-
-console.log("\n--- REAL PRODUCTS: TPO QUOTE RESULTS ---");
-
-if (results && results.length > 0) {
-  console.log(`Found quotes from ${results.length} underwriters:`);
-  results.forEach(quote => {
-    console.log(`- ${quote.insurerName}: Rate Value = ${quote.basePremiumDetails.rateValue}, Total = KES ${quote.totalPremium}`);
-  });
-
-  console.log("\n--- FULL JSON OF FIRST QUOTE ---");
-  console.log(JSON.stringify(results[0], null, 2));
-} else {
-  console.log("No quotes generated! None of your actual products matched 3 tonnes, GENERAL_CARTAGE, TPO.");
-}
-console.log("-----------------------------------------\n");

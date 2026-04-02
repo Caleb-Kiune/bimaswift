@@ -1,4 +1,5 @@
 import { prisma } from "@/src/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
@@ -54,13 +55,13 @@ export async function POST(req: Request) {
         stampDuty: quoteBreakdown.stampDuty.value,
         totalPayable: quoteBreakdown.totalPayable,
 
-        basicPremiumDetails: quoteBreakdown.basicPremium.breakdown as any,
-        calculatedRiders: quoteBreakdown.calculatedRiders as any,
+        basicPremiumDetails: quoteBreakdown.basicPremium.breakdown as unknown as Prisma.InputJsonValue,
+        calculatedRiders: quoteBreakdown.calculatedRiders as unknown as Prisma.InputJsonValue,
         levyDetails: {
           itl: quoteBreakdown.itl.breakdown,
           phcf: quoteBreakdown.phcf.breakdown,
           stampDuty: quoteBreakdown.stampDuty.breakdown,
-        } as any,
+        } as unknown as Prisma.InputJsonValue,
       },
     });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
   privateQuoteSchema, 
@@ -34,9 +34,9 @@ export default function QuoteForm({
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     setValue,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm<PrivateQuoteRequest>({
     resolver: zodResolver(privateQuoteSchema),
     mode: "onBlur", // validate on blur
@@ -47,10 +47,9 @@ export default function QuoteForm({
     },
   });
 
-  const vehicleValue = watch("vehicleValue");
-  const yom = watch("yom");
-  const coverType = watch("coverType");
-  const selectedRiders = watch("selectedRiders") || {};
+  const vehicleValue = useWatch({ control, name: "vehicleValue" });
+  const yom = useWatch({ control, name: "yom" });
+  const coverType = useWatch({ control, name: "coverType" });
 
   const currentYear = new Date().getFullYear();
   const forceTpo =
