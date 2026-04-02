@@ -23,6 +23,7 @@ export default function QuoteForm({
     comparisonQuotes,
     fetchQuotes,
     isLoadingQuotes,
+    recalculatingInsurers,
     handleSaveQuote,
     globalRiders,
     handleGlobalRiderToggle,
@@ -124,6 +125,7 @@ export default function QuoteForm({
         handleInsurerRiderToggle={handleInsurerRiderToggle}
         handleInsurerRiderOptionChange={handleInsurerRiderOptionChange}
         displayedCoverType={displayedCoverType}
+        recalculatingInsurers={recalculatingInsurers}
       />
     </div>
   );

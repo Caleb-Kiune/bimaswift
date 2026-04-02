@@ -27,16 +27,13 @@ export async function POST(req: Request) {
        return NextResponse.json({ error: "Insurer not found" }, { status: 404 });
     }
 
-    // Zero-Trust: Recalculate on the server
-    const productSpecificRiderIds = product.riders
-        .filter((rider) => selectedRiderIds.includes(rider.type))
-        .map((rider) => rider.id);
-
+    // Zero-Trust: Recalculate on the server. The engine intrinsically defends against tampered 
+    // string IDs by verifying them strictly against the underwriter's product.riders matrix.
     const quoteBreakdown = calculatePremium(
         vehicleValue,
         coverType,
         product,
-        productSpecificRiderIds
+        selectedRiderIds
     );
 
     const savedQuote = await prisma.motorPrivateQuote.create({

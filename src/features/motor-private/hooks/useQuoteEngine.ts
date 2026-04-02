@@ -41,6 +41,11 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
 
   const [rawComparisonQuotes, setRawComparisonQuotes] = useState<any[] | null>(null);
   const [isLoadingQuotes, setIsLoadingQuotes] = useState(false);
+  const [recalculatingInsurers, setRecalculatingInsurers] = useState<Record<string, boolean>>({});
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const singleAbortControllerRef = useRef<AbortController | null>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // 1. Establish the stateful tracker
   const sortTrackerRef = useRef({ signature: "", lockedRank: [] as string[] });
@@ -49,18 +54,24 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   const fetchQuotes = async () => {
     if (vehicleValue === "" || yom === "") return;
     
+    if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     setIsLoadingQuotes(true);
+    setInsurerUpgrades({}); // Reset secondary toggles on fresh lookup
     try {
-      const selectedRiderIds = Object.keys(globalRiders).filter(k => globalRiders[k]);
-      
       const res = await fetch("/api/quotes/private", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: abortControllerRef.current.signal,
         body: JSON.stringify({
+          requestMode: "MARKET_SCAN",
           vehicleValue,
           yom,
           coverType: displayedCoverType,
-          selectedRiderIds,
+          selectedRiders: globalRiders,
         }),
       });
 
@@ -68,11 +79,67 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
       
       const data = await res.json();
       setRawComparisonQuotes(data.quotes);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+         console.error(err);
+      }
     } finally {
       setIsLoadingQuotes(false);
     }
+  };
+
+  const updateSingleQuote = async (insurerId: string, customCombinedRiders: Record<string, string | boolean>) => {
+      if (vehicleValue === "" || yom === "") return;
+
+      if (singleAbortControllerRef.current) {
+         singleAbortControllerRef.current.abort();
+      }
+      singleAbortControllerRef.current = new AbortController();
+
+      setRecalculatingInsurers(p => ({ ...p, [insurerId]: true }));
+
+      try {
+        const res = await fetch("/api/quotes/private", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: singleAbortControllerRef.current.signal,
+          body: JSON.stringify({
+             requestMode: "UPDATE_SINGLE",
+             targetInsurerId: insurerId,
+             vehicleValue,
+             yom,
+             coverType: displayedCoverType,
+             selectedRiders: customCombinedRiders,
+          }),
+        });
+
+        if (!res.ok) throw new Error("Failed to update single quote");
+        
+        const data = await res.json();
+        const updatedQuoteData = data.quotes[0];
+
+        if (updatedQuoteData) {
+            setRawComparisonQuotes(prev => {
+                if (!prev) return prev;
+                return prev.map(q => q.insurerId === insurerId ? updatedQuoteData : q);
+            });
+        }
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+            console.error("Update single quote error", err);
+        }
+      } finally {
+        setRecalculatingInsurers(p => ({ ...p, [insurerId]: false }));
+      }
+  };
+
+  const executeTargetedUpdate = (insurerId: string, newInsurerState: Record<string, string | boolean>) => {
+      const combinedRiders = { ...globalRiders, ...newInsurerState };
+
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+          updateSingleQuote(insurerId, combinedRiders);
+      }, 300);
   };
 
 
@@ -104,12 +171,16 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   const handleInsurerRiderToggle = (insurerId: string, type: string) => {
     setInsurerUpgrades((prev) => {
       const currentInsurerState = prev[insurerId] || {};
+      const newInsurerState = {
+        ...currentInsurerState,
+        [type]: !currentInsurerState[type],
+      };
+      
+      executeTargetedUpdate(insurerId, newInsurerState);
+      
       return {
         ...prev,
-        [insurerId]: {
-          ...currentInsurerState,
-          [type]: !currentInsurerState[type],
-        },
+        [insurerId]: newInsurerState,
       };
     });
   };
@@ -121,12 +192,16 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   ) => {
     setInsurerUpgrades((prev) => {
       const currentInsurerState = prev[insurerId] || {};
+      const newInsurerState = {
+        ...currentInsurerState,
+        [type]: optionId,
+      };
+
+      executeTargetedUpdate(insurerId, newInsurerState);
+
       return {
         ...prev,
-        [insurerId]: {
-          ...currentInsurerState,
-          [type]: optionId,
-        },
+        [insurerId]: newInsurerState,
       };
     });
   };
@@ -203,6 +278,7 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
     comparisonQuotes,
     fetchQuotes,
     isLoadingQuotes,
+    recalculatingInsurers,
     handleCopyQuote,
     handleSaveQuote,
     globalRiders,

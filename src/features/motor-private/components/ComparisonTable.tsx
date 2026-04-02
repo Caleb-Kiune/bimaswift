@@ -30,6 +30,7 @@ interface Props {
     optionId: string,
   ) => void;
   displayedCoverType: "COMPREHENSIVE" | "TPO";
+  recalculatingInsurers: Record<string, boolean>;
 }
 
 // Custom Dropdown
@@ -155,6 +156,7 @@ export default function QuoteMarketplace({
   handleInsurerRiderToggle,
   handleInsurerRiderOptionChange,
   displayedCoverType,
+  recalculatingInsurers,
 }: Props) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
 
@@ -203,6 +205,8 @@ export default function QuoteMarketplace({
             (r) => r.type !== "PVT" && r.type !== "EXCESS_PROTECTOR",
           ) || [];
 
+        const isRecalculating = recalculatingInsurers[comp.insurerId];
+
         return (
           <div
             key={comp.insurerId}
@@ -239,7 +243,7 @@ export default function QuoteMarketplace({
               </div>
 
               <div className="mt-3 sm:mt-0 w-full sm:w-auto flex flex-row sm:flex-col justify-between sm:items-end items-center">
-                <span className="font-extrabold text-2xl tracking-tight text-zinc-900">
+                <span className={`font-extrabold text-2xl tracking-tight text-zinc-900 transition-opacity duration-300 ${isRecalculating ? "opacity-30" : "opacity-100"}`}>
                   KES {comp.quote.totalPayable.toLocaleString("en-KE")}
                 </span>
                 <span className="text-xs font-medium text-indigo-600 mt-1 flex items-center gap-1">

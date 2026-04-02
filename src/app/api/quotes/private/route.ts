@@ -16,14 +16,36 @@ export async function POST(req: Request) {
       );
     }
 
-    const { vehicleValue, coverType, selectedRiderIds } = validationResult.data;
+    const { requestMode, vehicleValue, coverType, selectedRiders, targetInsurerId } = validationResult.data;
 
-    // Calculate quotes for all active underwriter products concurrently
-    const quotes = activePrivateProducts.map((product) => {
-      // Find valid product-specific riders that map to the selected generic rider IDs
+    if (requestMode === "UPDATE_SINGLE" && !targetInsurerId) {
+      return NextResponse.json(
+        { error: "targetInsurerId is required for UPDATE_SINGLE mode" },
+        { status: 400 }
+      );
+    }
+
+    const productsToProcess = requestMode === "UPDATE_SINGLE"
+      ? activePrivateProducts.filter((p) => p.insurerId === targetInsurerId)
+      : activePrivateProducts;
+
+    if (productsToProcess.length === 0) {
+      return NextResponse.json(
+        { error: "No matching insurers found" },
+        { status: 404 }
+      );
+    }
+
+    // Calculate quotes for relevant underwriter products
+    const quotes = productsToProcess.map((product) => {
+      // Safely extract selected options or generic parent IDs based on truthy dictionary keys
       const productSpecificRiderIds = product.riders
-        .filter((rider) => selectedRiderIds?.includes(rider.type))
-        .map((rider) => rider.id);
+        .filter((rider) => selectedRiders[rider.id] || selectedRiders[rider.type])
+        .map((rider) => {
+           const selectedValue = selectedRiders[rider.type] || selectedRiders[rider.id];
+           if (typeof selectedValue === "string") return selectedValue;
+           return rider.id;
+        });
 
       const quoteBreakdown = calculatePremium(
         vehicleValue,
