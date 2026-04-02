@@ -3,7 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import Navbar from "@/src/components/layout/Navbar";
 import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
+import { cn } from "@/src/lib/utils";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 

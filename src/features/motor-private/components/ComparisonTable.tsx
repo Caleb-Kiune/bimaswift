@@ -8,6 +8,9 @@ import {
 import { Show, SignInButton } from "@clerk/nextjs";
 import { formatKES } from "@/src/lib/formatters";
 import DownloadPrivateQuoteWrapper from "./DownloadPrivateQuoteWrapper";
+import { Button } from "@/src/components/ui/button";
+import { Spinner } from "@/src/components/ui/spinner";
+import { EmptyState } from "@/src/components/ui/empty-state";
 
 interface ComparisonQuote {
   insurerId: string;
@@ -168,14 +171,11 @@ export default function QuoteMarketplace({
   // Empty state handling
   if (sortedQuotes.length === 0) {
     return (
-      <div className="mt-8 p-8 text-center bg-zinc-50 border border-zinc-200 rounded-2xl">
-        <h3 className="text-lg font-medium text-zinc-900">
-          No quotes available
-        </h3>
-        <p className="mt-1 text-sm text-zinc-500">
-          Please adjust your parameters to generate new quotes.
-        </p>
-      </div>
+      <EmptyState 
+        className="mt-8"
+        title="No quotes available" 
+        description="Please adjust your parameters to generate new quotes."
+      />
     );
   }
 
@@ -471,30 +471,33 @@ export default function QuoteMarketplace({
                     />
 
                     <Show when="signed-in">
-                      <button
+                      <Button
+                        variant="ghost"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           handleSaveQuote(comp.insurerId, comp.riderIds);
                         }}
                         disabled={isSubmitting}
-                        className="w-full bg-transparent text-zinc-500 py-2.5 rounded-xl text-sm font-semibold hover:bg-zinc-50 hover:text-zinc-800 disabled:opacity-50 transition-colors"
+                        className="w-full rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground"
                       >
+                        {isSubmitting && <Spinner size="sm" className="mr-2" />}
                         {isSubmitting ? "Saving..." : "Save to Dashboard"}
-                      </button>
+                      </Button>
                     </Show>
 
                     <Show when="signed-out">
                       <SignInButton mode="modal" fallbackRedirectUrl="/">
-                        <button
+                        <Button
+                          variant="ghost"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                           }}
-                          className="w-full bg-transparent text-zinc-500 py-2.5 rounded-xl text-sm font-semibold hover:bg-zinc-50 hover:text-zinc-800 transition-colors"
+                          className="w-full rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground"
                         >
                           Sign in to save this quote
-                        </button>
+                        </Button>
                       </SignInButton>
                     </Show>
                   </div>

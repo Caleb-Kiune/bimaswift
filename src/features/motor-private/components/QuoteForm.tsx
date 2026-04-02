@@ -11,6 +11,9 @@ import VehicleInputForm from "./VehicleInputForm";
 import QuoteMarketplace from "./ComparisonTable";
 import { InsuranceProduct } from "../types";
 import { UNDERWRITING_RULES } from "@/src/features/motor-private/utils/constants";
+import { Button } from "@/src/components/ui/button";
+import { Spinner } from "@/src/components/ui/spinner";
+import { Switch } from "@/src/components/ui/switch";
 
 export default function QuoteForm({
   initialProducts,
@@ -58,6 +61,15 @@ export default function QuoteForm({
 
   const displayedCoverType = forceTpo ? "TPO" : coverType;
 
+  const selectedRidersPVT = useWatch({
+    control,
+    name: "selectedRiders.PVT",
+  });
+  const selectedRidersExcess = useWatch({
+    control,
+    name: "selectedRiders.EXCESS_PROTECTOR",
+  });
+
   const onSubmit = async (data: PrivateQuoteRequest) => {
     // If forceTpo is active, silently compel TPO coverage to backend
     if (forceTpo) {
@@ -69,7 +81,7 @@ export default function QuoteForm({
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
       {/* THE INPUT SECTION */}
-      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-zinc-200 shadow-sm">
+      <div className="bg-card text-card-foreground p-6 sm:p-8 rounded-2xl border border-border shadow-sm">
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <VehicleInputForm
             register={register}
@@ -88,33 +100,25 @@ export default function QuoteForm({
               </h4>
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
                 {/* PVT Toggle */}
-                <label className="flex items-center justify-between sm:justify-start gap-3 cursor-pointer group">
-                  <span className="text-sm font-medium text-zinc-700 group-hover:text-zinc-900 transition-colors">
+                <label className="flex flex-1 items-center justify-between sm:justify-start gap-3 cursor-pointer group">
+                  <span className="text-sm font-medium text-foreground group-hover:text-foreground/80 transition-colors">
                     Political Violence (PVT)
                   </span>
-                  <div className="relative inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      {...register("selectedRiders.PVT")}
-                    />
-                    <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
-                  </div>
+                  <Switch 
+                    checked={!!selectedRidersPVT}
+                    onCheckedChange={(checked) => setValue("selectedRiders.PVT", checked)}
+                  />
                 </label>
 
                 {/* Excess Protector Toggle */}
-                <label className="flex items-center justify-between sm:justify-start gap-3 cursor-pointer group">
-                  <span className="text-sm font-medium text-zinc-700 group-hover:text-zinc-900 transition-colors">
+                <label className="flex flex-1 items-center justify-between sm:justify-start gap-3 cursor-pointer group">
+                  <span className="text-sm font-medium text-foreground group-hover:text-foreground/80 transition-colors">
                     Excess Protector
                   </span>
-                  <div className="relative inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      {...register("selectedRiders.EXCESS_PROTECTOR")}
-                    />
-                    <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
-                  </div>
+                  <Switch 
+                    checked={!!selectedRidersExcess}
+                    onCheckedChange={(checked) => setValue("selectedRiders.EXCESS_PROTECTOR", checked)}
+                  />
                 </label>
               </div>
             </div>
@@ -127,17 +131,16 @@ export default function QuoteForm({
             </div>
           )}
 
-          <div className="pt-4 flex justify-end border-t border-zinc-100">
-             <button 
+          <div className="pt-4 flex justify-end border-t border-border">
+             <Button 
                 type="submit" 
-                disabled={isLoadingQuotes || !vehicleValue || !yom}
-                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-xl shadow-sm transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+                size="lg"
+                disabled={isLoadingQuotes}
+                className="w-full sm:w-auto rounded-xl shadow-sm text-base"
              >
-                {isLoadingQuotes && (
-                  <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-                )}
+                {isLoadingQuotes && <Spinner size="sm" className="text-primary-foreground mr-2" />}
                 {isLoadingQuotes ? "Fetching Market Rates..." : "Get Quotes"}
-             </button>
+             </Button>
           </div>
         </form>
       </div>

@@ -3,6 +3,8 @@
 import React from "react";
 import { UseFormRegister, FieldErrors, UseFormSetValue } from "react-hook-form";
 import { PrivateQuoteRequest } from "../validations/privateValidation";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
 
 interface Props {
   register: UseFormRegister<PrivateQuoteRequest>;
@@ -55,21 +57,22 @@ export default function VehicleInputForm({
       <div className="grid grid-cols-1 gap-5 max-w-md mx-auto">
         {/* VEHICLE VALUE INPUT */}
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-zinc-700">
+          <Label htmlFor="vehicleValue" className="text-zinc-700">
             Vehicle Value
-          </label>
+          </Label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <span
-                className={`font-medium ${errors.vehicleValue ? "text-red-400" : "text-zinc-500"}`}
+                className={`font-medium ${errors.vehicleValue ? "text-destructive" : "text-muted-foreground"}`}
               >
                 KES
               </span>
             </div>
-            <input
+            <Input
+              id="vehicleValue"
               type="text"
               inputMode="numeric"
-              onWheel={(e) => (e.target as HTMLInputElement).blur()}
+              onWheel={(e: React.WheelEvent<HTMLInputElement>) => (e.target as HTMLInputElement).blur()}
               disabled={isSubmitting}
               {...register("vehicleValue", {
                 setValueAs: (v) => {
@@ -79,17 +82,17 @@ export default function VehicleInputForm({
                 },
                 onChange: handleValueChange,
               })}
-              className={`w-full pl-14 pr-4 py-3.5 bg-zinc-50 border rounded-xl font-medium text-lg focus:bg-white focus:outline-none focus:ring-2 transition-colors disabled:opacity-60 ${
+              className={`pl-14 py-6 text-lg ${
                 errors.vehicleValue
-                  ? "border-red-400 text-red-900 focus:ring-red-500 focus:border-red-500 bg-red-50/30"
-                  : "border-zinc-200 text-zinc-900 focus:ring-indigo-500 focus:border-indigo-500"
+                  ? "border-destructive text-destructive focus-visible:ring-destructive bg-destructive/5"
+                  : "bg-zinc-50"
               }`}
               placeholder="e.g. 1,500,000"
             />
           </div>
           {/* Helper / Error Text */}
           <p
-            className={`text-xs flex items-center gap-1 ${errors.vehicleValue ? "text-red-500 font-medium" : "text-zinc-400"}`}
+            className={`text-xs flex items-center gap-1 ${errors.vehicleValue ? "text-destructive font-medium" : "text-zinc-500"}`}
           >
             {errors.vehicleValue ? (
               <>
@@ -116,29 +119,30 @@ export default function VehicleInputForm({
 
         {/* YEAR OF MANUFACTURE INPUT */}
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-zinc-700">
+          <Label htmlFor="yom" className="text-zinc-700">
             Year of Manufacture
-          </label>
-          <input
+          </Label>
+          <Input
+            id="yom"
             type="number"
-            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+            onWheel={(e: React.WheelEvent<HTMLInputElement>) => (e.target as HTMLInputElement).blur()}
             disabled={isSubmitting}
-            onKeyDown={(e) => {
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
               if (e.key === "-" || e.key === "e") e.preventDefault();
             }}
             {...register("yom", {
                setValueAs: (v) => (v === "" ? undefined : Number(v)),
             })}
-            className={`w-full px-4 py-3.5 bg-zinc-50 border rounded-xl font-medium text-lg focus:bg-white focus:outline-none focus:ring-2 transition-colors disabled:opacity-60 ${
+            className={`py-6 text-lg ${
               errors.yom
-                ? "border-red-400 text-red-900 focus:ring-red-500 focus:border-red-500 bg-red-50/30"
-                : "border-zinc-200 text-zinc-900 focus:ring-indigo-500 focus:border-indigo-500"
+                ? "border-destructive text-destructive focus-visible:ring-destructive bg-destructive/5"
+                : "bg-zinc-50"
             }`}
             placeholder="e.g. 2018"
           />
           {/* Helper / Error Text */}
           <p
-            className={`text-xs flex items-center gap-1 ${errors.yom ? "text-red-500 font-medium" : "text-zinc-400"}`}
+            className={`text-xs flex items-center gap-1 ${errors.yom ? "text-destructive font-medium" : "text-zinc-500"}`}
           >
             {errors.yom ? (
               <>
@@ -166,7 +170,7 @@ export default function VehicleInputForm({
 
       {/* COVER TYPE SELECTOR */}
       <div className="space-y-1.5 pt-2">
-        <label className="text-sm font-semibold text-zinc-700 flex justify-between items-center">
+        <Label className="flex justify-between items-center text-zinc-700">
           <span>Cover Type</span>
           {forceTpo && (
             <span className="text-[10px] sm:text-xs text-amber-700 font-bold bg-amber-100 px-2 py-1 rounded-md uppercase tracking-wider flex items-center gap-1">
@@ -186,7 +190,7 @@ export default function VehicleInputForm({
               Age/Value limits require TPO
             </span>
           )}
-        </label>
+        </Label>
         <div className="grid grid-cols-2 gap-2 p-1 bg-zinc-100/80 rounded-xl border border-zinc-200/50">
           <button
             type="button"
