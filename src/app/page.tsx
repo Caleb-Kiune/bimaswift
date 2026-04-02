@@ -1,82 +1,66 @@
+"use client";
+
 import Link from "next/link";
-import QuoteForm from "@/src/features/motor-private/components/QuoteForm";
-import { getActiveMotorProducts } from "@/src/features/motor-private/services/products";
+import { Card } from "@/src/components/ui/card";
+import { buttonVariants } from "@/src/components/ui/button";
+import { cn } from "@/src/lib/utils";
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const params = await searchParams;
-  const activeTab = params.tab || "motor";
-
-  const initialProducts =
-    activeTab === "motor" ? await getActiveMotorProducts() : [];
-
+export default function Home() {
   return (
-    
-    <main className="min-h-screen bg-gray-50 flex flex-col items-center p-8">
-      <div className="w-full max-w-2xl space-y-8">
-        
-        {/* Header Toggle */}
-        <div className="text-center space-y-6">
-          <h1 className="text-3xl font-semibold text-gray-900">
-            Premium Calculator
+    <main className="min-h-screen bg-secondary/30 flex justify-center py-16 px-4">
+      <div className="w-full max-w-4xl space-y-12">
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground">
+            BimaSwift Quoting Hub
           </h1>
-
-          <div className="inline-flex bg-gray-200 rounded-lg p-1 shadow-inner">
-            <Link
-              href="/?tab=motor"
-              className={`px-6 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
-                activeTab === "motor"
-                  ? "bg-white text-black shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Private Motor
-            </Link>
-            
-            {/* 1. Changed Medical to Commercial */}
-            <Link
-              href="/?tab=commercial"
-              className={`px-6 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
-                activeTab === "commercial"
-                  ? "bg-white text-black shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Commercial Motor
-            </Link>
-          </div>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Select an insurance product line below to generate rapid, accurate market quotes instantly.
+          </p>
         </div>
 
-      {/* The Calculators */}
-        <div>
-          {activeTab === "motor" ? (
-            <QuoteForm initialProducts={initialProducts} />
-          ) : (
-            
-            <div className="bg-white p-14 rounded-2xl border border-gray-200 shadow-sm text-center">
-              <h2 className="text-2xl font-semibold text-gray-900 tracking-tight">
-                Commercial Motor Engine
-              </h2>
-              <div className="w-10 h-px bg-gray-300 mx-auto my-5"></div>
-              <p className="text-gray-500 text-sm leading-relaxed max-w-xs mx-auto mb-8">
-                Access the enterprise module for heavy commercial vehicles, general cartage, and fleet policies.
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+          {/* Card 1: Motor Private */}
+          <Card className="rounded-2xl p-8 border border-border shadow-sm hover:border-border/80 transition-all flex flex-col justify-between bg-card text-card-foreground">
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Private Motor</h2>
+              <p className="text-muted-foreground leading-relaxed h-16">
+                Instant quotes for personal vehicles. Access seamless TPO or comprehensive coverage with dynamic rider selection.
               </p>
-              
-              {/* 3. The Launch Button to your dedicated route */}
-              <Link
-                href="/commercial"
-                className="bg-blue-600 text-white px-8 py-3 rounded-md hover:bg-blue-700 transition font-medium shadow-sm"
-              >
-                Launch Calculator
-              </Link>
             </div>
             
-          )}
+            <div className="pt-8 mt-auto">
+              <Link href="/quote/motor-private" className={cn(buttonVariants({ size: "lg" }), "w-full rounded-xl")}>
+                 Get Private Quote
+              </Link>
+            </div>
+          </Card>
+
+          {/* Card 2: Motor Commercial */}
+          <Card className="rounded-2xl p-8 border border-border shadow-sm hover:border-border/80 transition-all flex flex-col justify-between bg-card text-card-foreground">
+             <div className="space-y-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Commercial Motor</h2>
+              <p className="text-muted-foreground leading-relaxed h-16">
+                Enterprise module for heavy commercial trucks, PSV, fleet cartage, and high-value liability policies.
+              </p>
+             </div>
+             
+             <div className="pt-8 mt-auto">
+              <Link href="/quote/motor-commercial" className={cn(buttonVariants({ size: "lg" }), "w-full rounded-xl")}>
+                 Get Commercial Quote
+              </Link>
+            </div>
+          </Card>
         </div>
-        
       </div>
     </main>
   );

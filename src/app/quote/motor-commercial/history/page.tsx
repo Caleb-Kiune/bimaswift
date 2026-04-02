@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "../../../lib/prisma";
+import { prisma } from "@/src/lib/prisma";
 import Link from "next/link";
 import DownloadQuoteWrapper from "@/src/features/motor-commercial/components/DownloadQuoteWrapper";
 import { 
@@ -33,7 +33,7 @@ export default async function CommercialHistoryPage() {
             <p className="text-sm text-gray-500">Review and manage your previous commercial quotes</p>
           </div>
           <Link
-            href="/commercial"
+            href="/quote/motor-commercial"
             className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow-sm"
           >
             + New Quote
