@@ -1,9 +1,9 @@
-import { QuoteBreakdown } from "../types";
+import { DetailedQuoteBreakdown } from "../types";
 
 export interface ComparisonQuote {
   insurerId: string;
   insurerName: string;
-  quote: QuoteBreakdown;
+  quote: DetailedQuoteBreakdown;
   riderIds: string[];
 }
 

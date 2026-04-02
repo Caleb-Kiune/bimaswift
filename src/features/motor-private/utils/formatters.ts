@@ -1,11 +1,11 @@
-import { QuoteBreakdown } from "@/src/features/motor-private/types";
+import { DetailedQuoteBreakdown } from "@/src/features/motor-private/types";
 import { formatKES } from "@/src/lib/formatters";
 
 export function formatWhatsAppQuote(
   insurerName: string,
   vehicleValue: number | "",
   coverType: string,
-  quoteBreakdown: QuoteBreakdown,
+  quoteBreakdown: DetailedQuoteBreakdown,
 ): string {
   if (vehicleValue === "") return "";
 
@@ -16,7 +16,7 @@ export function formatWhatsAppQuote(
       quoteBreakdown.calculatedRiders
         .map(
           (rider) =>
-            `+ ${rider.name}: ${rider.premium === 0 ? "Included (Free)" : formatKES(rider.premium)}`,
+            `+ ${rider.name}: ${rider.premium.value === 0 ? "Included (Free)" : formatKES(rider.premium.value)}`,
         )
         .join("\n");
   }
@@ -37,3 +37,4 @@ Cover Type: ${coverType}
 *Total Payable: ${formatKES(quoteBreakdown.totalPayable)}*
   `.trim();
 }
+

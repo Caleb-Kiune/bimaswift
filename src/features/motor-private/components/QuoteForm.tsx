@@ -21,7 +21,6 @@ export default function QuoteForm({
     forceTpo,
     displayedCoverType,
     comparisonQuotes,
-    handleCopyQuote,
     handleSaveQuote,
     globalRiders,
     handleGlobalRiderToggle,
@@ -103,7 +102,6 @@ export default function QuoteForm({
       <QuoteMarketplace
         comparisonQuotes={comparisonQuotes}
         isSubmitting={isSubmitting}
-        handleCopyQuote={handleCopyQuote}
         handleSaveQuote={handleSaveQuote}
         products={products}
         insurerUpgrades={insurerUpgrades}

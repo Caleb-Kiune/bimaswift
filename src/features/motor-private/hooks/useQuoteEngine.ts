@@ -7,12 +7,13 @@ import {
 } from "@/src/features/motor-private/engine/sorting";
 import {
   InsuranceProduct,
-  QuoteBreakdown,
+  DetailedQuoteBreakdown,
 } from "@/src/features/motor-private/types";
 import { formatWhatsAppQuote } from "@/src/features/motor-private/utils/formatters";
 import { UNDERWRITING_RULES } from "@/src/features/motor-private/utils/constants";
 import { useRouter } from "next/navigation";
 import { v4 } from "uuid";
+
 
 export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
   const router = useRouter();
@@ -145,7 +146,7 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
 
   const handleCopyQuote = async (
     insurerId: string,
-    quoteBreakdown: QuoteBreakdown,
+    quoteBreakdown: DetailedQuoteBreakdown,
   ) => {
     const selectedProduct = products?.find((p) => p.insurerId === insurerId);
     const insurerName = selectedProduct?.insurerName || "Selected Insurer";

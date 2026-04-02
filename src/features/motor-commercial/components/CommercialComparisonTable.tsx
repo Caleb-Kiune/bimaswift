@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@clerk/nextjs"; // 1. Import Clerk's auth hook
-import Link from "next/link"; // Optional: to link users to your sign-in page
+import { useAuth } from "@clerk/nextjs";
 
 import { CommercialQuoteResult, CommercialVehicleRequest } from "../types";
 import DownloadQuoteWrapper from "./DownloadQuoteWrapper";

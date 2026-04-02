@@ -3,14 +3,11 @@ import {
   RatingBand,
   TieredRider,
   InsuranceProduct,
-  QuoteBreakdown,
-  CalculatedRider,
   BasicPremiumBreakdown,
   ExplainedValue,
   RiderBreakdown,
   DetailedCalculatedRider,
   DetailedQuoteBreakdown,
-  GrossPremiumBreakdown,
 } from "@/src/features/motor-private/types";
 
 /**

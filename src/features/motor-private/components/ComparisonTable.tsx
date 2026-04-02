@@ -1,23 +1,25 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
-  QuoteBreakdown,
+  DetailedQuoteBreakdown,
   InsuranceProduct,
 } from "@/src/features/motor-private/types";
 import { Show, SignInButton } from "@clerk/nextjs";
+import { formatKES } from "@/src/lib/formatters";
+import DownloadPrivateQuoteWrapper from "./DownloadPrivateQuoteWrapper";
 
 interface ComparisonQuote {
   insurerId: string;
   insurerName: string;
-  quote: QuoteBreakdown;
+  quote: DetailedQuoteBreakdown;
   riderIds: string[];
 }
 
 interface Props {
   comparisonQuotes: ComparisonQuote[] | null;
   isSubmitting: boolean;
-  handleCopyQuote: (insurerId: string, quote: QuoteBreakdown) => void;
+
   handleSaveQuote: (insurerId: string, riderIds: string[]) => void;
   products: InsuranceProduct[] | null;
   insurerUpgrades: Record<string, Record<string, string | boolean>>;
@@ -146,7 +148,7 @@ function CustomSelect({
 export default function QuoteMarketplace({
   comparisonQuotes,
   isSubmitting,
-  handleCopyQuote,
+
   handleSaveQuote,
   products,
   insurerUpgrades,
@@ -155,6 +157,8 @@ export default function QuoteMarketplace({
   displayedCoverType,
 }: Props) {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
+
+  const formatRate = (bps: number) => `${(bps / 100).toFixed(2)}%`;
 
   // The quotes are already stably sorted by the Orchestrator Hook
   const sortedQuotes = comparisonQuotes || [];
@@ -223,8 +227,9 @@ export default function QuoteMarketplace({
                         ? "Comprehensive"
                         : "Third Party Only"}
                     </span>
-                    {comp.quote.calculatedRiders.filter((r) => r.premium === 0)
-                      .length > 0 && (
+                    {comp.quote.calculatedRiders.filter(
+                      (r) => r.premium.value === 0,
+                    ).length > 0 && (
                       <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide">
                         Free Add-ons Included
                       </span>
@@ -259,47 +264,79 @@ export default function QuoteMarketplace({
             {/* EXPANDABLE RECEIPT SECTION */}
             {isExpanded && (
               <div className="px-5 pb-5">
-                <div className="border-t border-dashed border-zinc-300 pt-4 text-sm space-y-4">
-                  {/* Basic Premium, Applied Riders, Taxes */}
-                  <div>
-                    <div className="flex justify-between text-zinc-600 mb-1">
+                <div className="border-t border-dashed border-zinc-300 pt-4 text-sm">
+                  {/* --- 1. BASIC PREMIUM WITH MATH STORY --- */}
+                  <div className="mb-3">
+                    <div className="flex justify-between items-center text-zinc-600">
                       <span>Basic Premium</span>
-                      <span className="font-medium">
-                        KES {comp.quote.basicPremium.toLocaleString("en-KE")}
+                      <span className="font-semibold text-zinc-900">
+                        {formatKES(comp.quote.basicPremium)}
                       </span>
+                    </div>
+                    <div className="flex gap-2 mt-1">
+                      <span className="text-[10px] text-zinc-400">
+                        Rate:{" "}
+                        {formatRate(comp.quote.basicPremium.breakdown.rateBps)}
+                      </span>
+                      {comp.quote.basicPremium.breakdown
+                        .isMinPremiumApplied && (
+                        <span className="text-[10px] text-amber-600 font-medium">
+                          ⚠️ Underwriter Minimum Enforced
+                        </span>
+                      )}
                     </div>
                   </div>
 
+                  {/* --- 2. DETAILED RIDERS BREAKDOWN --- */}
                   {comp.quote.calculatedRiders.length > 0 && (
-                    <div className="space-y-1.5">
+                    <div className="bg-zinc-50 p-3 rounded-md space-y-2 mb-4">
+                      <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+                        Included Benefits
+                      </p>
                       {comp.quote.calculatedRiders.map((rider) => (
                         <div
                           key={rider.id}
-                          className="flex justify-between text-zinc-600"
+                          className="flex justify-between items-start"
                         >
-                          <span className="flex items-center gap-1.5">
-                            <svg
-                              className="w-3.5 h-3.5 text-emerald-500"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                            {rider.name}
-                          </span>
-                          <span>
-                            {rider.premium === 0 ? (
+                          <div>
+                            <p className="text-xs text-zinc-700 flex items-center gap-1.5">
+                              <svg
+                                className="w-3.5 h-3.5 text-emerald-500"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={3}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                              {rider.name}
+                            </p>
+                            {/* Rider Math Story */}
+                            <p className="text-[10px] text-zinc-400 ml-5 mt-0.5">
+                              {rider.premium.breakdown.rateType === "FREE" &&
+                                "Complimentary"}
+                              {rider.premium.breakdown.rateType === "FLAT" &&
+                                "Flat Rate"}
+                              {rider.premium.breakdown.rateType ===
+                                "OPTION_SELECTION" && "Selected Tier Limit"}
+                              {rider.premium.breakdown.rateType ===
+                                "PERCENTAGE_BPS" &&
+                                `Rate: ${formatRate(rider.premium.breakdown.rateValue)}`}
+                              {rider.premium.breakdown.isMinPremiumApplied &&
+                                " (Min. Applied)"}
+                            </p>
+                          </div>
+                          <span className="text-xs font-medium text-zinc-700">
+                            {rider.premium.value === 0 ? (
                               <span className="text-emerald-600 font-semibold text-xs uppercase">
                                 Free
                               </span>
                             ) : (
-                              `KES ${rider.premium.toLocaleString("en-KE")}`
+                              formatKES(rider.premium)
                             )}
                           </span>
                         </div>
@@ -307,18 +344,38 @@ export default function QuoteMarketplace({
                     </div>
                   )}
 
-                  <div className="pt-2 border-t border-zinc-100">
-                    <div className="flex justify-between text-zinc-500 text-xs">
-                      <span>Taxes & Levies (ITL, PHCF, Stamp Duty)</span>
+                  {/* --- 3. DETAILED LEVIES BREAKDOWN --- */}
+                  <div className="text-sm border-t border-dashed border-zinc-200 pt-3 space-y-1.5">
+                    <div className="flex justify-between text-xs text-zinc-500">
                       <span>
-                        KES{" "}
-                        {(
-                          comp.quote.itl +
-                          comp.quote.phcf +
-                          comp.quote.stampDuty
-                        ).toLocaleString("en-KE")}
+                        Training Levy (
+                        {formatRate(comp.quote.itl.breakdown.rateValue)})
                       </span>
+                      <span>{formatKES(comp.quote.itl)}</span>
                     </div>
+                    <div className="flex justify-between text-xs text-zinc-500">
+                      <span>
+                        Policyholders Fund (
+                        {formatRate(comp.quote.phcf.breakdown.rateValue)})
+                      </span>
+                      <span>{formatKES(comp.quote.phcf)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-zinc-500">
+                      <span>Stamp Duty</span>
+                      <span>{formatKES(comp.quote.stampDuty)}</span>
+                    </div>
+                  </div>
+
+                  {/* --- 4. BOTTOM TOTAL --- */}
+                  <div className="pt-3 mt-3 border-t border-zinc-200">
+                    <p className="flex justify-between items-baseline">
+                      <span className="text-sm font-semibold text-zinc-700">
+                        Total Premium
+                      </span>
+                      <span className="text-lg font-bold text-indigo-600">
+                        {formatKES(comp.quote.totalPayable)}
+                      </span>
+                    </p>
                   </div>
 
                   {/* UPDATED SPECIALTY UPGRADES SECTION */}
@@ -403,30 +460,11 @@ export default function QuoteMarketplace({
 
                   {/* ACTION BUTTONS */}
                   <div className="pt-4 space-y-3">
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleCopyQuote(comp.insurerId, comp.quote);
-                      }}
-                      className="w-full flex items-center justify-center gap-2 bg-zinc-900 text-white py-3.5 rounded-xl text-sm font-bold shadow-sm hover:bg-zinc-800 active:scale-[0.98] transition-all"
-                    >
-                      {/* Standard Copy/Document Icon */}
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        />
-                      </svg>
-                      Copy Quote
-                    </button>
+                    <DownloadPrivateQuoteWrapper
+                      insurerName={comp.insurerName}
+                      quote={comp.quote}
+                      coverType={displayedCoverType}
+                    />
 
                     <Show when="signed-in">
                       <button
