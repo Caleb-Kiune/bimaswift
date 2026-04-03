@@ -73,6 +73,7 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
       
       const responseData = await res.json();
       setRawComparisonQuotes(responseData.quotes);
+      console.log("PREMIUM RESULT FROM API:", responseData.quotes);
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== "AbortError") {
          console.error(err);
