@@ -53,6 +53,12 @@ export default function PrivateQuoteDocument({ insurerName, quote, coverType }: 
             <Text style={styles.label}>Cover Type:</Text>
             <Text style={styles.value}>{coverType === "COMPREHENSIVE" ? "Comprehensive" : "Third Party Only"}</Text>
           </View>
+          {quote.vehicleValue && (
+            <View style={styles.row}>
+              <Text style={styles.label}>Sum Insured:</Text>
+              <Text style={styles.value}>KES {formatNum(quote.vehicleValue)}</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.section}>

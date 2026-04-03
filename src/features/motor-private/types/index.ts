@@ -177,6 +177,7 @@ export interface GrossPremiumBreakdown {
 }
 
 export interface DetailedQuoteBreakdown {
+  vehicleValue?: number;
   basicPremium: ExplainedValue<BasicPremiumBreakdown>;
   calculatedRiders: DetailedCalculatedRider[];
   grossPremium: ExplainedValue<GrossPremiumBreakdown>;

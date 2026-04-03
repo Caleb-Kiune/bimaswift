@@ -225,6 +225,11 @@ export default function QuoteMarketplace({
                   <h4 className="font-bold text-lg text-zinc-900 leading-tight">
                     {comp.insurerName}
                   </h4>
+                  {comp.quote.vehicleValue && (
+                    <span className="text-xs text-zinc-500 mt-1 block">
+                      Sum Insured: KES {comp.quote.vehicleValue.toLocaleString()}
+                    </span>
+                  )}
                   <div className="flex flex-wrap items-center gap-2 mt-1">
                     <span className="text-xs text-zinc-500">
                       {displayedCoverType === "COMPREHENSIVE"

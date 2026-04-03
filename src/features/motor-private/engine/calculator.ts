@@ -273,6 +273,7 @@ export default function calculatePremium(
 
   // --- 4. FINAL ASSEMBLY ---
   return {
+    vehicleValue,
     basicPremium,
     calculatedRiders,
     grossPremium,
