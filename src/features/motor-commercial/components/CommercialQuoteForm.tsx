@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -24,22 +24,23 @@ export default function CommercialQuoteForm({
   setQuoteRequest,
   setQuoteResults,
 }: CommercialQuoteFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const {
     register,
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+
+    formState: { errors, isSubmitting },
   } = useForm<CommercialQuoteFormValues>({
     resolver: zodResolver(commercialQuoteSchema),
+    mode: "onTouched",
     defaultValues: {
       coverType: "TPO",
-      tonnage: 0,
+      tonnage: undefined as unknown as number,
       usageType: "OWN_GOODS",
       isFleet: false,
       includePLL: false,
+      selectedRiders: [],
     },
   });
 
@@ -48,7 +49,6 @@ export default function CommercialQuoteForm({
   const isFleet = watch("isFleet");
 
   const onSubmit = async (data: CommercialQuoteFormValues) => {
-    setIsSubmitting(true);
     try {
       console.log("SENDING DATA TO API:", data);
 
@@ -72,23 +72,32 @@ export default function CommercialQuoteForm({
       console.log("PREMIUM RESULT FROM API:", result.quotes);
     } catch (error) {
       console.error("Submission error:", error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
+  const onError = (errors: any) => {
+    const cleanErrors = Object.keys(errors).reduce((acc: any, key) => {
+      acc[key] = errors[key]?.message;
+      return acc;
+    }, {});
+
+    console.error(
+      "Form Validation Failed:",
+      JSON.stringify(cleanErrors, null, 2),
+    );
+  };
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+      onSubmit={handleSubmit(onSubmit, onError)}
       className="w-full max-w-xl mx-auto space-y-8 bg-card text-card-foreground p-6 sm:p-8 rounded-2xl shadow-sm border border-border"
     >
       {/* HEADER SECTION */}
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight">
-          Commercial Quote
-        </h2>
+        <h2 className="text-2xl font-bold tracking-tight">Commercial Quote</h2>
         <p className="text-sm text-muted-foreground">
-          Enter your vehicle details to get a customized commercial insurance quote.
+          Enter your vehicle details to get a customized commercial insurance
+          quote.
         </p>
       </div>
 
@@ -97,22 +106,32 @@ export default function CommercialQuoteForm({
 
         <hr className="border-border" />
 
-        <CommercialVehicleDetails 
-          register={register} 
-          errors={errors} 
-          coverType={coverType} 
+        <CommercialVehicleDetails
+          register={register}
+          errors={errors}
+          coverType={coverType}
         />
 
         <hr className="border-border" />
 
-        <CommercialLiabilityAddons 
+        <CommercialLiabilityAddons
           register={register}
           errors={errors}
           coverType={coverType}
           includePLL={includePLL}
           isFleet={isFleet || false}
-          setFleet={(val) => setValue("isFleet", val)}
-          setPLL={(val) => setValue("includePLL", val)}
+          setFleet={(val) =>
+            setValue("isFleet", val, {
+              shouldValidate: true,
+              shouldDirty: true,
+            })
+          }
+          setPLL={(val) =>
+            setValue("includePLL", val, {
+              shouldValidate: true,
+              shouldDirty: true,
+            })
+          }
         />
       </div>
 
@@ -122,9 +141,12 @@ export default function CommercialQuoteForm({
           type="submit"
           size="lg"
           disabled={isSubmitting}
+          onMouseDown={(e) => e.preventDefault()}
           className="w-full relative flex items-center justify-center gap-2 group rounded-xl shadow-sm"
         >
-          {isSubmitting && <Spinner size="sm" className="mr-2 text-primary-foreground" />}
+          {isSubmitting && (
+            <Spinner size="sm" className="mr-2 text-primary-foreground" />
+          )}
           <span>{isSubmitting ? "Calculating..." : "Get Quote"}</span>
           {!isSubmitting && (
             <svg
