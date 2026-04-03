@@ -273,6 +273,7 @@ export default function calculatePremium(
 
   // --- 4. FINAL ASSEMBLY ---
   return {
+    coverType,
     vehicleValue,
     basicPremium,
     calculatedRiders,

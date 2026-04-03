@@ -26,6 +26,8 @@ export default function CommercialComparisonTable({
   const [savingQuotesIds, setSavingQuotesIds] = useState<string[]>([]);
 
   const formatRate = (bps: number) => `${(bps / 100).toFixed(2)}%`;
+  const formatUsageType = (type: string) => type === "OWN_GOODS" ? "Own Goods" : "General Cartage";
+  const formatCoverType = (type: string) => type === "COMPREHENSIVE" ? "Comprehensive" : "Third Party Only";
 
   const handleSaveQuote = async (selectedQuote: CommercialQuoteResult) => {
     if (!quoteRequest) return;
@@ -86,7 +88,7 @@ export default function CommercialComparisonTable({
                         {quote.insurerName.charAt(0)}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <h4 className="font-bold text-lg leading-tight text-foreground">
                             {quote.insurerName}
                           </h4>
@@ -95,6 +97,14 @@ export default function CommercialComparisonTable({
                               Fleet Rate
                             </span>
                           )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <span className="text-xs text-muted-foreground">
+                            {formatCoverType(quote.coverType)}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            &bull; {formatUsageType(quote.usageType)}
+                          </span>
                         </div>
                         {quote.sumInsured && (
                           <span className="text-xs text-muted-foreground mt-1 block">
@@ -137,7 +147,7 @@ export default function CommercialComparisonTable({
                     </div>
 
                     {/* 🚨 NEW: Add the PLL Breakdown Here 🚨 */}
-                    {quote.pllCharge > 0 && (
+                    {quote.pllCharge > 0 && quote.pllDetails && (
                       <div className="mb-3 border-t border-dashed border-border pt-3">
                         <div className="flex justify-between items-center text-muted-foreground">
                           <span>Passenger Legal Liability</span>
@@ -147,7 +157,7 @@ export default function CommercialComparisonTable({
                         </div>
                         <div className="flex gap-2 mt-1">
                           <span className="text-[10px] text-muted-foreground">
-                            Required for carrying passengers
+                            Rate: KES {quote.pllDetails.ratePerPassenger.toLocaleString()} per passenger x {quote.pllDetails.passengerCount} passengers
                           </span>
                         </div>
                       </div>

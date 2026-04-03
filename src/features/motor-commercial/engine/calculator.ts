@@ -29,8 +29,14 @@ export default function calculatePremium(
 
       // STEP 2: Add Passenger Legal Liability (PLL)
       let pllCharge = 0;
+      let pllDetails = undefined;
       if (request.includePLL) {
         pllCharge = (request.passengerCount || 0) * product.pllPerPassenger;
+        pllDetails = {
+          amount: pllCharge,
+          passengerCount: request.passengerCount || 0,
+          ratePerPassenger: product.pllPerPassenger,
+        };
       }
 
       // STEP 3: Add Optional Riders
@@ -47,9 +53,12 @@ export default function calculatePremium(
         insurerId: product.insurerId,
         insurerName: product.insurerName,
         sumInsured: request.sumInsured,
+        usageType: request.usageType,
+        coverType: request.coverType,
 
         basicPremium: basePremium,
         pllCharge: pllCharge,
+        pllDetails: pllDetails,
         riderPremiums: totalRiderPremium,
         totalLevies: levyDetails.totalLevies,
         stampDuty: product.levies.stampDuty,

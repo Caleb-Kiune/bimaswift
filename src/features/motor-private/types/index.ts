@@ -177,6 +177,7 @@ export interface GrossPremiumBreakdown {
 }
 
 export interface DetailedQuoteBreakdown {
+  coverType?: "COMPREHENSIVE" | "TPO";
   vehicleValue?: number;
   basicPremium: ExplainedValue<BasicPremiumBreakdown>;
   calculatedRiders: DetailedCalculatedRider[];

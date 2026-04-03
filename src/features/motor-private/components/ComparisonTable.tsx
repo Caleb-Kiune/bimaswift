@@ -472,7 +472,6 @@ export default function QuoteMarketplace({
                     <DownloadPrivateQuoteWrapper
                       insurerName={comp.insurerName}
                       quote={comp.quote}
-                      coverType={displayedCoverType}
                     />
 
                     <Show when="signed-in">

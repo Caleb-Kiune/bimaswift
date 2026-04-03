@@ -117,6 +117,14 @@ export default function QuoteDocument({ quote }: QuoteDocumentProps) {
             <Text style={styles.value}>{quote.insurerName}</Text>
           </View>
           <View style={styles.row}>
+            <Text style={styles.label}>Cover Type:</Text>
+            <Text style={styles.value}>{quote.coverType === "COMPREHENSIVE" ? "Comprehensive" : "Third Party Only"}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Usage Category:</Text>
+            <Text style={styles.value}>{quote.usageType === "OWN_GOODS" ? "Own Goods" : "General Cartage"}</Text>
+          </View>
+          <View style={styles.row}>
             <Text style={styles.label}>Vehicle Sum Insured:</Text>
             <Text style={styles.value}>KES {quote.sumInsured?.toLocaleString() ?? "N/A"}</Text>
           </View>
@@ -141,12 +149,12 @@ export default function QuoteDocument({ quote }: QuoteDocumentProps) {
           </View>
 
           {/* 🚨 NEW: Add the PLL Breakdown Here 🚨 */}
-          {quote.pllCharge > 0 && (
+          {quote.pllCharge > 0 && quote.pllDetails && (
             <View style={styles.row}>
               <View>
                 <Text style={styles.label}>Passenger Legal Liability</Text>
                 <Text style={{ fontSize: 9, color: "#6b7280" }}>
-                  Required for carrying passengers
+                  Rate: KES {quote.pllDetails.ratePerPassenger.toLocaleString()} per passenger x {quote.pllDetails.passengerCount} passengers
                 </Text>
               </View>
               <Text style={styles.value}>KES {quote.pllCharge.toLocaleString()}</Text>

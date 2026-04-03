@@ -27,10 +27,9 @@ const styles = StyleSheet.create({
 interface Props {
   insurerName: string;
   quote: DetailedQuoteBreakdown;
-  coverType: "COMPREHENSIVE" | "TPO";
 }
 
-export default function PrivateQuoteDocument({ insurerName, quote, coverType }: Props) {
+export default function PrivateQuoteDocument({ insurerName, quote }: Props) {
   const formatRate = (bps: number) => `${(bps / 100).toFixed(2)}%`;
   const formatNum = (num: number) => num.toLocaleString("en-KE");
 
@@ -51,7 +50,7 @@ export default function PrivateQuoteDocument({ insurerName, quote, coverType }: 
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Cover Type:</Text>
-            <Text style={styles.value}>{coverType === "COMPREHENSIVE" ? "Comprehensive" : "Third Party Only"}</Text>
+            <Text style={styles.value}>{quote.coverType === "COMPREHENSIVE" ? "Comprehensive" : "Third Party Only"}</Text>
           </View>
           {quote.vehicleValue && (
             <View style={styles.row}>

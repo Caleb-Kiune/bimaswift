@@ -135,6 +135,12 @@ export interface CommercialVehicleRequest {
   selectedRiders?: string[];
 }
 
+export interface PLLBreakdown {
+  amount: number;
+  passengerCount: number;
+  ratePerPassenger: number;
+}
+
 /**
  * THE OUTPUT CONTRACT (To the Comparison Table)
  * This is what the calculator spits out. It is pre-formatted for easy React rendering.
@@ -143,9 +149,12 @@ export interface CommercialQuoteResult {
   insurerId: string;
   insurerName: string;
   sumInsured: number | undefined;
+  usageType: UsageCategory;
+  coverType: CoverType;
 
   basicPremium: number;
   pllCharge: number;
+  pllDetails?: PLLBreakdown;
   riderPremiums: number;
   totalLevies: number;
   stampDuty: number;

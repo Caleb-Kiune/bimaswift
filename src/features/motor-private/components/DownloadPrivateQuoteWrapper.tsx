@@ -8,10 +8,9 @@ import { DetailedQuoteBreakdown } from "../types";
 interface Props {
   insurerName: string;
   quote: DetailedQuoteBreakdown;
-  coverType: "COMPREHENSIVE" | "TPO";
 }
 
-export default function DownloadPrivateQuoteWrapper({ insurerName, quote, coverType }: Props) {
+export default function DownloadPrivateQuoteWrapper({ insurerName, quote }: Props) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -31,7 +30,7 @@ export default function DownloadPrivateQuoteWrapper({ insurerName, quote, coverT
 
   return (
     <PDFDownloadLink
-      document={<PrivateQuoteDocument insurerName={insurerName} quote={quote} coverType={coverType} />}
+      document={<PrivateQuoteDocument insurerName={insurerName} quote={quote} />}
       fileName={`${insurerName.replace(/\s+/g, '_')}_Quote.pdf`}
       className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3.5 rounded-xl text-sm font-bold shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition-all"
     >
