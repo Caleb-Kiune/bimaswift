@@ -37,30 +37,24 @@ export async function POST(req: Request) {
         selectedRiderIds
     );
 
-    const savedQuote = await prisma.motorPrivateQuote.create({
+    const savedQuote = await prisma.savedQuote.create({
       data: {
-        idempotencyKey,
         userId,
         insurerId,
         insurerName: product.insurerName,
-        vehicleValue,
-        yom: parseInt(yom, 10),
-        coverType,
-        selectedRiderIds,
+        module: "MOTOR_PRIVATE",
         
-        basicPremium: quoteBreakdown.basicPremium.value,
-        grossPremium: quoteBreakdown.grossPremium.value,
-        itl: quoteBreakdown.itl.value,
-        phcf: quoteBreakdown.phcf.value,
-        stampDuty: quoteBreakdown.stampDuty.value,
-        totalPayable: quoteBreakdown.totalPayable,
+        coverType,
+        totalPremium: quoteBreakdown.totalPayable,
+        sumInsured: vehicleValue || null,
 
-        basicPremiumDetails: quoteBreakdown.basicPremium.breakdown as unknown as Prisma.InputJsonValue,
-        calculatedRiders: quoteBreakdown.calculatedRiders as unknown as Prisma.InputJsonValue,
-        levyDetails: {
-          itl: quoteBreakdown.itl.breakdown,
-          phcf: quoteBreakdown.phcf.breakdown,
-          stampDuty: quoteBreakdown.stampDuty.breakdown,
+        quoteData: quoteBreakdown as unknown as Prisma.InputJsonValue,
+        requestData: {
+          idempotencyKey,
+          vehicleValue,
+          yom,
+          coverType,
+          selectedRiderIds,
         } as unknown as Prisma.InputJsonValue,
       },
     });

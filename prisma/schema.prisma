@@ -23,67 +23,24 @@ model Quote {
   userId           String
 }
 
-model MotorCommercialQuote {
-  id               String   @id @default(uuid())
-  userId           String
-  insurerId        String
-  insurerName      String 
-
-  // Request Context
-  coverType        String   
-  usageType        String   
-  tonnage          Float
-  sumInsured       Float?
-  isFleet          Boolean
-  includePLL       Boolean
-  passengerCount   Int?
-  selectedRiders   String[] 
-
-  // Premium Totals
-  basicPremium     Float
-  pllCharge        Float
-  riderPremiums    Float
-  levies           Float    
-  stampDuty        Float
-  totalPremium     Float
-
-  // Transparency Details (The "Math Story")
-  basePremiumDetails Json?   
-  riderDetails       Json?   
-  levyDetails        Json?   
+model SavedQuote {
+  id              String   @id @default(uuid())
+  userId          String
+  insurerId       String
+  insurerName     String
+  module          String   // "MOTOR_PRIVATE" | "MOTOR_COMMERCIAL"
   
-  // UX Flags
-  floorOverrodeDiscount Boolean @default(false)
-  fleetDiscountApplied  Boolean @default(false)
+  // High-Level indexable metadata 
+  coverType       String
+  totalPremium    Float    
+  sumInsured      Float?
 
-  createdAt        DateTime @default(now())
-}
+  // Immutable Snapshots
+  // Stores 'DetailedQuoteBreakdown' or 'CommercialQuoteResult'
+  quoteData       Json
+  
+  // Stores 'PrivateQuoteRequest' or 'CommercialVehicleRequest'
+  requestData     Json
 
-model MotorPrivateQuote {
-  id               String   @id @default(uuid())
-  idempotencyKey   String   @unique
-  userId           String
-  insurerId        String
-  insurerName      String
-
-  // Request Context
-  vehicleValue     Int
-  yom              Int
-  coverType        String
-  selectedRiderIds String[]
-
-  // Premium Totals
-  basicPremium     Float
-  grossPremium     Float
-  itl              Float
-  phcf             Float
-  stampDuty        Float
-  totalPayable     Float
-
-  // Transparency Details
-  basicPremiumDetails Json?
-  calculatedRiders    Json?
-  levyDetails         Json?
-
-  createdAt        DateTime @default(now())
+  createdAt       DateTime @default(now())
 }

@@ -1,23 +1,22 @@
 import { prisma } from "@/src/lib/prisma";
-import { Quote } from "@prisma/client";
+import { SavedQuote } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
+import PrivateQuoteCard from "@/src/features/motor-private/components/PrivateQuoteCard";
+import CommercialQuoteCard from "@/src/features/motor-commercial/components/CommercialQuoteCard";
+import { DetailedQuoteBreakdown } from "@/src/features/motor-private/types";
+import { CommercialQuoteResult } from "@/src/features/motor-commercial/types";
+import { EmptyState } from "@/src/components/ui/empty-state";
 
 export default async function Dashboard() {
-  // 1. Grab the active user's ID
   const { userId } = await auth();
-  let fetchedQuotes: Quote[] = [];
+  let fetchedQuotes: SavedQuote[] = [];
 
   try {
-    // 2. Fetch only their quotes
     if (userId) {
-      fetchedQuotes = await prisma.quote.findMany({
-        where: {
-          userId: userId,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        take: 10, // Show top 10 recent
+      fetchedQuotes = await prisma.savedQuote.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 20,
       });
     }
   } catch (error) {
@@ -25,43 +24,62 @@ export default async function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center p-8">
-      <div className="w-full max-w-2xl space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-800">Saved Quotes</h1>
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4 md:px-8">
+      <div className="w-full max-w-4xl space-y-8">
+        <div className="flex flex-col md:flex-row items-center justify-between border-b pb-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Saved Quotes</h1>
+            <p className="text-muted-foreground text-sm mt-1">Review and download your historical quote documents.</p>
+          </div>
         </div>
 
-        <div className="mt-6 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          {fetchedQuotes.length === 0 ? (
-            <p className="text-sm text-gray-500">No quotes saved yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {fetchedQuotes.map((quote) => (
-                <div
-                  key={quote.id}
-                  className="p-3 bg-gray-50 rounded-lg border flex justify-between items-center"
-                >
-                  <div>
-                    <span className="font-semibold text-blue-900">
-                      {quote.insurerId}
-                    </span>
-                    <span className="text-xs text-gray-500 ml-2">
-                      {new Date(quote.createdAt).toLocaleDateString()}
-                    </span>
+        {fetchedQuotes.length === 0 ? (
+          <EmptyState 
+            title="No Saved Quotes" 
+            description="You haven't saved any commercial or private vehicle quotes to your dashboard yet." 
+          />
+        ) : (
+          <div className="space-y-6">
+            {fetchedQuotes.map((savedEntity) => {
+              // Distinguish and Render
+              if (savedEntity.module === "MOTOR_PRIVATE") {
+                const quoteData = savedEntity.quoteData as unknown as DetailedQuoteBreakdown;
+                const requestData = savedEntity.requestData as any;
+                return (
+                  <div key={savedEntity.id} className="relative">
+                     <span className="absolute -top-3 left-4 z-10 bg-indigo-100 text-indigo-800 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm">
+                       Motor Private
+                     </span>
+                     <PrivateQuoteCard
+                       insurerId={savedEntity.insurerId}
+                       insurerName={savedEntity.insurerName}
+                       quote={quoteData}
+                       riderIds={requestData?.selectedRiderIds || []}
+                       isHistoryView={true}
+                     />
                   </div>
-                  <div className="text-right">
-                    <div className="font-medium">
-                      KES {quote.vehicleValue.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {quote.coverType}
-                    </div>
+                );
+              }
+              
+              if (savedEntity.module === "MOTOR_COMMERCIAL") {
+                const quoteData = savedEntity.quoteData as unknown as CommercialQuoteResult;
+                return (
+                  <div key={savedEntity.id} className="relative">
+                     <span className="absolute -top-3 left-4 z-10 bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm">
+                       Motor Commercial
+                     </span>
+                     <CommercialQuoteCard
+                       quote={quoteData}
+                       isHistoryView={true}
+                     />
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                );
+              }
+
+              return null;
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

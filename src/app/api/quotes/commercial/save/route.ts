@@ -46,37 +46,19 @@ export async function POST(req: Request) {
    
 
     // 4. Persistence using create()
-    const savedQuote = await prisma.motorCommercialQuote.create({
+    const savedQuote = await prisma.savedQuote.create({
       data: {
-        // User Info
         userId: userId,
         insurerId: verifiedQuote.insurerId,
         insurerName: verifiedQuote.insurerName,
-        // Quote Request
+        module: "MOTOR_COMMERCIAL",
+
         coverType: quoteRequest.coverType,
-        usageType: quoteRequest.usageType,
-        tonnage: quoteRequest.tonnage,
-        sumInsured: quoteRequest.sumInsured,
-        isFleet: quoteRequest.isFleet,
-        includePLL: quoteRequest.includePLL,
-        passengerCount: quoteRequest.passengerCount,
-        selectedRiders: quoteRequest.selectedRiders,
-        // Quote Results
-        basicPremium: verifiedQuote.basicPremium,
-        pllCharge: verifiedQuote.pllCharge,
-        riderPremiums: verifiedQuote.riderPremiums,
-        levies: verifiedQuote.totalLevies,
-        stampDuty: verifiedQuote.stampDuty,
         totalPremium: verifiedQuote.totalPremium,
+        sumInsured: quoteRequest.sumInsured || null,
 
-        // Breakdown
-        basePremiumDetails: verifiedQuote.basePremiumDetails as unknown as Prisma.InputJsonValue,
-        riderDetails: verifiedQuote.riderDetails as unknown as Prisma.InputJsonValue,
-        levyDetails: verifiedQuote.levyDetails as unknown as Prisma.InputJsonValue,
-
-        // Flags
-        floorOverrodeDiscount: verifiedQuote.floorOverrodeDiscount,
-        fleetDiscountApplied: verifiedQuote.fleetDiscountApplied,
+        quoteData: verifiedQuote as unknown as Prisma.InputJsonValue,
+        requestData: quoteRequest as unknown as Prisma.InputJsonValue,
       },
     });
 
