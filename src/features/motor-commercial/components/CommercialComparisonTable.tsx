@@ -136,6 +136,24 @@ export default function CommercialComparisonTable({
                       </div>
                     </div>
 
+                    {/* 🚨 NEW: Add the PLL Breakdown Here 🚨 */}
+                    {quote.pllCharge > 0 && (
+                      <div className="mb-3 border-t border-dashed border-border pt-3">
+                        <div className="flex justify-between items-center text-muted-foreground">
+                          <span>Passenger Legal Liability</span>
+                          <span className="font-semibold text-foreground">
+                            KES {quote.pllCharge.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-[10px] text-muted-foreground">
+                            Required for carrying passengers
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {/* -------------------------------------- */}
+
                     {/* Riders */}
                     {quote.riderDetails.length > 0 && (
                       <div className="bg-secondary/50 p-3 rounded-md space-y-2 mb-4">

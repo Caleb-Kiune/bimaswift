@@ -44,7 +44,7 @@ export default function PrivateQuoteDocument({ insurerName, quote, coverType }: 
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Policy Summary</Text>
+          <Text style={styles.sectionTitle}>Quote Summary</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Insurer:</Text>
             <Text style={styles.value}>{insurerName}</Text>

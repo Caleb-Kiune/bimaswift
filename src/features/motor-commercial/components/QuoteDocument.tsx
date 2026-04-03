@@ -105,13 +105,13 @@ export default function QuoteDocument({ quote }: QuoteDocumentProps) {
         {/* HEADER */}
         <View style={styles.header}>
           <Text style={styles.title}>BimaSwift</Text>
-          <Text style={styles.subtitle}>Official Commercial Motor Quote</Text>
+          <Text style={styles.subtitle}>Commercial Motor Quote</Text>
           <Text style={styles.subtitle}>Reference Date: {new Date().toLocaleDateString()}</Text>
         </View>
 
         {/* RISK SUMMARY */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Risk Summary</Text>
+          <Text style={styles.sectionTitle}>Quote Summary</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Insurer:</Text>
             <Text style={styles.value}>{quote.insurerName}</Text>
@@ -139,6 +139,19 @@ export default function QuoteDocument({ quote }: QuoteDocumentProps) {
             </View>
             <Text style={styles.value}>KES {quote.basicPremium.toLocaleString()}</Text>
           </View>
+
+          {/* 🚨 NEW: Add the PLL Breakdown Here 🚨 */}
+          {quote.pllCharge > 0 && (
+            <View style={styles.row}>
+              <View>
+                <Text style={styles.label}>Passenger Legal Liability</Text>
+                <Text style={{ fontSize: 9, color: "#6b7280" }}>
+                  Required for carrying passengers
+                </Text>
+              </View>
+              <Text style={styles.value}>KES {quote.pllCharge.toLocaleString()}</Text>
+            </View>
+          )}
           
           {/* Riders Section */}
           {quote.riderDetails.map((rider) => (
