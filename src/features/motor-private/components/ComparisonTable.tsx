@@ -23,7 +23,7 @@ interface Props {
   comparisonQuotes: ComparisonQuote[] | null;
   isSubmitting: boolean;
 
-  handleSaveQuote: (insurerId: string, riderIds: string[]) => void;
+  handleSaveQuote: (insurerId: string) => void;
   products: InsuranceProduct[] | null;
   insurerUpgrades: Record<string, Record<string, string | boolean>>;
   handleInsurerRiderToggle: (insurerId: string, type: string) => void;
@@ -84,7 +84,6 @@ export default function QuoteMarketplace({
               insurerId={comp.insurerId}
               insurerName={comp.insurerName}
               quote={comp.quote}
-              riderIds={comp.riderIds}
               isHistoryView={false}
               isSubmitting={isSubmitting}
               handleSaveQuote={handleSaveQuote}

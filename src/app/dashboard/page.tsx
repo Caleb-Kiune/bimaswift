@@ -44,7 +44,6 @@ export default async function Dashboard() {
               // Distinguish and Render
               if (savedEntity.module === "MOTOR_PRIVATE") {
                 const quoteData = savedEntity.quoteData as unknown as DetailedQuoteBreakdown;
-                const requestData = savedEntity.requestData as any;
                 return (
                   <div key={savedEntity.id} className="relative">
                      <span className="absolute -top-3 left-4 z-10 bg-indigo-100 text-indigo-800 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-sm">
@@ -54,7 +53,6 @@ export default async function Dashboard() {
                        insurerId={savedEntity.insurerId}
                        insurerName={savedEntity.insurerName}
                        quote={quoteData}
-                       riderIds={requestData?.selectedRiderIds || []}
                        isHistoryView={true}
                      />
                   </div>

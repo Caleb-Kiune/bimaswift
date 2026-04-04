@@ -15,12 +15,11 @@ export async function POST(req: Request) {
     }
 
     const {
-      idempotencyKey,
       vehicleValue,
       yom,
       coverType,
       insurerId,
-      selectedRiderIds = [],
+      selectedRiders = {},
     } = await req.json();
 
     const product = activePrivateProducts.find((p) => p.insurerId === insurerId);
@@ -28,13 +27,13 @@ export async function POST(req: Request) {
        return NextResponse.json({ error: "Insurer not found" }, { status: 404 });
     }
 
-    // Zero-Trust: Recalculate on the server. The engine intrinsically defends against tampered 
-    // string IDs by verifying them strictly against the underwriter's product.riders matrix.
+    // Zero-Trust: Recalculate on the server using the same Record<string, string|boolean>
+    // the live quote engine uses. This guarantees the snapshot is identical.
     const quoteBreakdown = calculatePremium(
         vehicleValue,
         coverType,
         product,
-        selectedRiderIds
+        selectedRiders
     );
 
     const savedQuote = await prisma.savedQuote.create({
@@ -50,11 +49,10 @@ export async function POST(req: Request) {
 
         quoteData: quoteBreakdown as unknown as Prisma.InputJsonValue,
         requestData: {
-          idempotencyKey,
           vehicleValue,
           yom,
           coverType,
-          selectedRiderIds,
+          selectedRiders,
         } as unknown as Prisma.InputJsonValue,
       },
     });
@@ -72,3 +70,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

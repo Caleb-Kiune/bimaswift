@@ -13,13 +13,12 @@ interface PrivateQuoteCardProps {
   insurerId: string;
   insurerName: string;
   quote: DetailedQuoteBreakdown;
-  riderIds?: string[];
   
   isHistoryView?: boolean;
   
   // Interactive Props (only needed if NOT history view)
   isSubmitting?: boolean;
-  handleSaveQuote?: (insurerId: string, riderIds: string[]) => void;
+  handleSaveQuote?: (insurerId: string) => void;
   product?: InsuranceProduct;
   insurerUpgrades?: Record<string, string | boolean>;
   handleInsurerRiderToggle?: (insurerId: string, type: string) => void;
@@ -36,7 +35,6 @@ export default function PrivateQuoteCard({
   insurerId,
   insurerName,
   quote,
-  riderIds = [],
   isHistoryView = false,
   isSubmitting = false,
   handleSaveQuote,
@@ -260,7 +258,7 @@ export default function PrivateQuoteCard({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        handleSaveQuote?.(insurerId, riderIds);
+                        handleSaveQuote?.(insurerId);
                       }}
                       disabled={isSubmitting}
                       className="w-full rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground"

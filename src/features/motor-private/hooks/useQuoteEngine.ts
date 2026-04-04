@@ -18,7 +18,6 @@ interface ApiQuoteResult {
 }
 import { formatWhatsAppQuote } from "@/src/features/motor-private/utils/formatters";
 import { useRouter } from "next/navigation";
-import { v4 } from "uuid";
 
 
 import { PrivateQuoteRequest } from "../validations/privateValidation";
@@ -224,19 +223,23 @@ export function useQuoteEngine(initialProducts: InsuranceProduct[]) {
     }
   };
 
-  const handleSaveQuote = async (insurerId: string, riderIds: string[]) => {
+  const handleSaveQuote = async (insurerId: string) => {
     if (!lockedSnapshot) return;
 
     setIsSubmitting(true);
-    const idempotencyKey = v4();
+
+    // Merge form-level rider selections with per-insurer card-level upgrades
+    const mergedRiders: Record<string, string | boolean> = {
+      ...(lockedSnapshot.selectedRiders || {}),
+      ...(insurerUpgrades[insurerId] || {}),
+    };
 
     const vehicleData = {
-      idempotencyKey,
       vehicleValue: lockedSnapshot.vehicleValue,
       yom: lockedSnapshot.yom,
       coverType: lockedSnapshot.coverType,
       insurerId,
-      selectedRiderIds: riderIds,
+      selectedRiders: mergedRiders,
     };
 
     try {

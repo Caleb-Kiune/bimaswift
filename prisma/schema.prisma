@@ -11,18 +11,6 @@ datasource db {
   provider = "postgresql"
 }
 
-model Quote {
-  id               String   @id @default(uuid())
-  idempotencyKey   String   @unique
-  vehicleValue     Int
-  yom              Int
-  coverType        String
-  insurerId        String
-  selectedRiderIds String[]
-  createdAt        DateTime @default(now())
-  userId           String
-}
-
 model SavedQuote {
   id              String   @id @default(uuid())
   userId          String
